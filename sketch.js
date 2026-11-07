@@ -1,9 +1,14 @@
 // Clair de Lune — visuals made only from moving circles.
 //
-// Click the canvas:
-//   top third    -> fireworks burst at the click point
-//   middle third -> ring of circles orbiting the click point
-//   bottom third -> rising bloom circles from the click point
+// Click (or press, drag and release) on the canvas:
+//   top third    -> fireworks burst at the press point
+//   middle third -> ring of circles orbiting the press point
+//   bottom third -> rising bloom circle from the press point
+//
+// Dragging before you release "throws" the gesture (see the Throw section):
+//   fireworks -> the burst leans in the drag direction
+//   orbit     -> the whole ring glides off in the drag direction
+//   bloom     -> the circle drifts sideways as it rises
 //
 // Each gesture is an async "coroutine": it snapshots the slider values,
 // then loops once per frame, writing its circles into a Map.
@@ -75,9 +80,37 @@ function addSlider(group, key, label, minVal, maxVal, value, step) {
   params[key] = slider;
 }
 
+// ---------- Throw: press, drag, release ----------
+//
+// Press on the canvas, drag, and let go: the drag becomes a "throw".
+// A throw is a vector { x, y }:
+//   - its direction is the drag direction
+//   - its length is the strength, from 0 (a plain click) to 1 (a long drag)
+// Gestures launch on release, so a plain click still works — it's just a throw of 0.
+
+const FULL_THROW_DRAG = 300; // pixels of drag that count as a full-strength throw
+
+let press = null; // { x, y } where the current press started, or null when not pressing
+
+function throwFromDrag(startX, startY, endX, endY) {
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const dragLength = sqrt(dx * dx + dy * dy);
+  if (dragLength === 0) return { x: 0, y: 0 };
+
+  const strength = min(dragLength / FULL_THROW_DRAG, 1);
+  return { x: (dx / dragLength) * strength, y: (dy / dragLength) * strength };
+}
+
+// Distance travelled by something thrown at `speed` that slows down from friction.
+// It starts fast, eases off, and comes to rest after travelling speed / friction pixels.
+function glide(speed, friction, seconds) {
+  return (speed / friction) * (1 - exp(-friction * seconds));
+}
+
 // ---------- Gesture: fireworks ----------
 
-async function launchFireworks(x0, y0) {
+async function launchFireworks(x0, y0, throwVec) {
   // snapshot params for this gesture
   const baseVelocity = param("fwVelocity"); // pixels per second
   const baseSize = param("fwSize");
@@ -85,9 +118,14 @@ async function launchFireworks(x0, y0) {
   const duration = 3000; // ms
   const gravity = 300; // pixels per second^2 — shared, so they all fall together
 
+  // throw: dragging sideways tilts the whole fan that way
+  const maxTilt = radians(50);
+  const tilt = throwVec.x * maxTilt;
+
   const particles = [];
   for (let i = 0; i < count; i++) {
-    const angle = random(-PI * 0.85, -PI * 0.15); // upward fan (screen y points down)
+    // upward fan (screen y points down), centered on straight up plus the tilt
+    const angle = -HALF_PI + tilt + random(-PI * 0.35, PI * 0.35);
     const speed = baseVelocity * random(0.5, 1.2);
     particles.push({
       vx: cos(angle) * speed,
@@ -142,7 +180,7 @@ function domainWarp(x, y, t, seed) {
 
 // ---------- Gesture: orbit around the center ----------
 
-async function launchOrbit(cx, cy) {
+async function launchOrbit(x0, y0, throwVec) {
   const fadeIn = param("orbitFadeIn") * 1000; // ms
   const speed = param("orbitSpeed") * random(0.75, 1.25); // radians per second, ±25% per orbit
   const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
@@ -152,6 +190,12 @@ async function launchOrbit(cx, cy) {
   const hold = 6000; // ms
   const fadeOut = 2000; // ms
   const duration = fadeIn + hold + fadeOut;
+
+  // throw: the whole ring glides off in the drag direction and slows to a stop
+  const throwSpeed = 900; // pixels per second at full strength
+  const friction = 1.5; // higher = stops sooner
+  const vx = throwVec.x * throwSpeed;
+  const vy = throwVec.y * throwSpeed;
 
   const startAngle = random(TWO_PI);
   const loopSeed = random(1000);
@@ -173,6 +217,10 @@ async function launchOrbit(cx, cy) {
     const size = fullSize * grow;
     const alpha = elapsed > fadeIn + hold ? 255 * (1 - (elapsed - fadeIn - hold) / fadeOut) : 255;
     const rotation = startAngle + (speed * elapsed) / 1000;
+
+    const seconds = elapsed / 1000;
+    const cx = x0 + glide(vx, friction, seconds);
+    const cy = y0 + glide(vy, friction, seconds);
 
     const t = elapsed / 150000; // slow drift of the warp field
 
@@ -196,12 +244,16 @@ async function launchOrbit(cx, cy) {
 
 // ---------- Gesture: rising bloom ----------
 
-async function launchBloom(x0, y0) {
+async function launchBloom(x0, y0, throwVec) {
   const power = param("bloomPower"); // 1 = constant speed, >1 = accelerates
   const duration = 5000; // ms
   const travel = y0 + 100; // rise until just past the top edge
   const wobble = 120; // pixels
   const seed = random(1000);
+
+  // throw: dragging sideways makes the circle drift that way as it rises
+  const maxLean = 300; // pixels of sideways drift over the whole rise, at full strength
+  const lean = throwVec.x * maxLean;
 
   const id = newId();
   const data = { circles: [] };
@@ -214,7 +266,8 @@ async function launchBloom(x0, y0) {
     phase = min(elapsed / duration, 1);
 
     const y = y0 - travel * pow(phase, power);
-    const x = x0 + (noise(seed, elapsed / 2000 + y * 0.004) - 0.5) * wobble; // noise of time + y
+    const wobbleX = (noise(seed, elapsed / 2000 + y * 0.004) - 0.5) * wobble; // noise of time + y
+    const x = x0 + wobbleX + lean * phase;
     const d = lerp(6, 80, 1 - pow(1 - phase, 2));
     const alpha = phase < 0.5 ? 200 : map(phase, 0.5, 1, 200, 0);
 
@@ -248,15 +301,30 @@ function setup() {
   addSlider(pl, "palette", "palette morph", 0, PALETTES.length - 1, 0, 0.01);
   addSlider(pl, "colorNoise", "color noise", 0, 80, 20, 1);
 
+  // Only presses that start on the canvas count (not presses on the sliders).
   canvas.mousePressed(() => {
-    if (mouseY < H / 3) {
-      launchFireworks(mouseX, mouseY);
-    } else if (mouseY < (2 * H) / 3) {
-      launchOrbit(mouseX, mouseY);
-    } else {
-      launchBloom(mouseX, mouseY);
-    }
+    press = { x: mouseX, y: mouseY };
   });
+}
+
+// Fires on release anywhere in the window, so a drag can end off the canvas.
+function mouseReleased() {
+  if (press === null) return; // this press didn't start on the canvas
+
+  const throwVec = throwFromDrag(press.x, press.y, mouseX, mouseY);
+  launchGesture(press.x, press.y, throwVec);
+  press = null;
+}
+
+// Which gesture launches depends on where the press started.
+function launchGesture(x, y, throwVec) {
+  if (y < H / 3) {
+    launchFireworks(x, y, throwVec);
+  } else if (y < (2 * H) / 3) {
+    launchOrbit(x, y, throwVec);
+  } else {
+    launchBloom(x, y, throwVec);
+  }
 }
 
 function drawLayer(layer) {
