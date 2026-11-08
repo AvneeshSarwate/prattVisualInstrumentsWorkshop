@@ -90,7 +90,9 @@ function addSlider(group, key, label, minVal, maxVal, value, step) {
 
 const FULL_THROW_DRAG = 300; // pixels of drag that count as a full-strength throw
 
-let press = null; // { x, y } where the current press started, or null when not pressing
+// One entry per finger (or mouse) currently pressed on the canvas.
+// key = pointerId, value = { x, y } where that press started.
+const presses = new Map();
 
 function throwFromDrag(startX, startY, endX, endY) {
   const dx = endX - startX;
@@ -301,19 +303,46 @@ function setup() {
   addSlider(pl, "palette", "palette morph", 0, PALETTES.length - 1, 0, 0.01);
   addSlider(pl, "colorNoise", "color noise", 0, 80, 20, 1);
 
-  // Only presses that start on the canvas count (not presses on the sliders).
-  canvas.mousePressed(() => {
-    press = { x: mouseX, y: mouseY };
-  });
+  setupPointers(canvas.elt);
 }
 
-// Fires on release anywhere in the window, so a drag can end off the canvas.
-function mouseReleased() {
-  if (press === null) return; // this press didn't start on the canvas
+// ---------- Multi-touch input ----------
+//
+// We use pointer events instead of p5's mouse functions so that every finger
+// is tracked separately (each one has its own pointerId). Two fingers = two gestures.
 
-  const throwVec = throwFromDrag(press.x, press.y, mouseX, mouseY);
-  launchGesture(press.x, press.y, throwVec);
-  press = null;
+// Convert a pointer event to canvas coordinates (works even if the canvas is scaled by CSS).
+function canvasPoint(el, e) {
+  const r = el.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+}
+
+function setupPointers(el) {
+  // Stop the browser from treating touches as scroll / pinch-zoom / right-click.
+  el.style.touchAction = "none";
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // Only presses that start on the canvas count (not presses on the sliders).
+  el.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return; // left mouse button only
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId); // keep getting this finger's events even off the canvas
+    presses.set(e.pointerId, canvasPoint(el, e));
+  });
+
+  // Release (anywhere, thanks to pointer capture) -> launch that finger's gesture.
+  el.addEventListener("pointerup", (e) => {
+    const press = presses.get(e.pointerId);
+    if (!press) return; // this press didn't start on the canvas
+    presses.delete(e.pointerId);
+
+    const end = canvasPoint(el, e);
+    const throwVec = throwFromDrag(press.x, press.y, end.x, end.y);
+    launchGesture(press.x, press.y, throwVec);
+  });
+
+  // The OS took over this touch (e.g. a system gesture): just forget it.
+  el.addEventListener("pointercancel", (e) => presses.delete(e.pointerId));
 }
 
 // Which gesture launches depends on where the press started.
