@@ -1,0 +1,7 @@
+{
+  "name": "pratt-visual-instruments-workshop",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js"
+  }
+}

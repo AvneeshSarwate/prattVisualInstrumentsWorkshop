@@ -1,34 +1,154 @@
+:root {
+  --bg: #111;
+  --card: #18181d;
+  --line: #2a2a33;
+  --text: #ddd;
+  --dim: #7a7a86;
+  --accent: #8fa8ff;
+}
 html, body {
   margin: 0;
   padding: 0;
-  background: #111;
-  color: #ddd;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, sans-serif;
   font-size: 13px;
 }
 canvas {
   display: block;
 }
+
+/* ---------- panel ---------- */
 #controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  padding: 12px 16px;
   max-width: 1280px;
+  padding: 10px 16px 24px;
   box-sizing: border-box;
 }
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+  color: var(--dim);
+  font-size: 12px;
+}
+.bar .devices.ok {
+  color: var(--accent);
+}
+.bar .last {
+  font-variant-numeric: tabular-nums;
+}
+.bar .note {
+  color: var(--accent);
+}
+.learn {
+  font: inherit;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.learn.active {
+  background: var(--accent);
+  color: var(--bg);
+}
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* ---------- cards ---------- */
+.group {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 8px 8px;
+}
 .group h3 {
-  margin: 0 0 6px;
-  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 4px 8px;
+  font-size: 12px;
   font-weight: 600;
 }
+.group h3 .knobs {
+  color: var(--dim);
+  font-weight: 400;
+}
+
+/* ---------- slider rows ---------- */
 .row {
   display: grid;
-  grid-template-columns: 120px 140px 40px;
+  grid-template-columns: 14px 28px 1fr 96px 46px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+/* rows 5+ aren't on a knob: dimmer, with a divider above them */
+.row:nth-child(n + 5) {
+  opacity: 0.5;
+}
+.row:nth-child(5) {
+  margin-top: 6px;
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+}
+.row:hover {
+  opacity: 1;
+}
+.row.dragging {
+  opacity: 1;
+  background: #262634;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.row.hit {
+  animation: hit 0.4s ease-out;
+}
+@keyframes hit {
+  from { background: rgba(143, 168, 255, 0.25); }
+  to { background: transparent; }
+}
+.handle {
+  color: var(--dim);
+  cursor: grab;
+  text-align: center;
+  user-select: none;
+  touch-action: none;
+}
+.row.dragging .handle {
+  cursor: grabbing;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 3px;
+  padding: 1px 0;
+  color: var(--bg);
+  background: var(--accent);
+}
+.badge:empty {
+  background: none;
+}
+.label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+.row input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
 }
 .value {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  color: var(--dim);
 }
