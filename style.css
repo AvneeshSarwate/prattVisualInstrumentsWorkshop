@@ -14,15 +14,75 @@ html, body {
   font-family: system-ui, sans-serif;
   font-size: 13px;
 }
+html {
+  background: var(--bg); /* also the fullscreen backdrop */
+}
 canvas {
   display: block;
+  margin: 0 auto;
 }
 
 /* ---------- panel ---------- */
 #controls {
-  max-width: 1280px;
   padding: 10px 16px 24px;
   box-sizing: border-box;
+}
+.exit-fullscreen {
+  display: none;
+}
+
+/* ---------- compact strip (used in fullscreen): only the knob-mapped sliders ---------- */
+#controls.compact {
+  padding: 4px 8px;
+}
+#controls.compact .bar,
+#controls.compact .row:nth-child(n + 5) {
+  display: none;
+}
+#controls.compact .groups {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+#controls.compact .group {
+  padding: 4px 4px 2px;
+}
+#controls.compact .group h3 {
+  margin-bottom: 2px;
+}
+#controls.compact .row {
+  padding: 1px 4px;
+}
+body.fullscreen {
+  overflow: hidden;
+}
+
+#touch-debug {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  font: 11px/1.4 ui-monospace, Consolas, monospace;
+  color: #cfe;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  pointer-events: none; /* never blocks touches on the canvas */
+  z-index: 10;
+}
+body.fullscreen .exit-fullscreen {
+  display: block;
+  position: fixed;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  font: inherit;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  opacity: 0.35;
+  cursor: pointer;
 }
 .bar {
   display: flex;

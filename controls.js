@@ -43,7 +43,15 @@ async function buildControls(groups, canvasEl) {
   ui.learn = el("button", "learn", "learn knobs");
   ui.learn.addEventListener("click", toggleLearn);
   ui.note = el("span", "note");
-  bar.append(ui.devices, ui.last, ui.learn, ui.note);
+  const fullscreenBtn = el("button", "learn", "fullscreen (F)");
+  fullscreenBtn.addEventListener("click", toggleFullscreen);
+  bar.append(ui.devices, ui.last, ui.learn, fullscreenBtn, ui.note);
+
+  // the status bar is hidden in fullscreen, so this small corner button gets you out without a keyboard
+  const exitBtn = el("button", "exit-fullscreen", "✕");
+  exitBtn.title = "exit fullscreen";
+  exitBtn.addEventListener("click", toggleFullscreen);
+  panel.append(exitBtn);
 
   const grid = el("div", "groups");
   for (const group of groups) grid.append(buildGroup(group, config.order?.[group.id] ?? []));

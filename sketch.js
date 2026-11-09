@@ -17,8 +17,10 @@
 // Slider panel, drag-to-reorder and saving: controls.js
 // BeatStep knobs (MIDI): midi.js
 
+// Drawing coordinates: always 1280 wide. H is set by fitCanvas() so the canvas has the shape
+// it will have in fullscreen on this screen (see Sizing & fullscreen).
 const W = 1280;
-const H = 720;
+let H = 720;
 
 // ---------- Parameters ----------
 //
@@ -362,6 +364,51 @@ async function setup() {
 
   await buildControls(PARAM_GROUPS, canvas.elt); // controls.js — sliders + BeatStep knobs
   setupPointers(canvas.elt);
+  setupSizing();
+}
+
+// ---------- Sizing & fullscreen ----------
+//
+// Fullscreen (press F, or the "fullscreen" button) hides all the browser UI. The slider panel
+// shrinks to a compact strip of just the knob-mapped sliders, and the canvas fills everything
+// above it: full screen width x (screen height - strip height).
+//
+// The canvas keeps that same shape when not fullscreen, so what you see in the window is what
+// you'll get in fullscreen. The sketch draws in W x H coordinates and draw() scales that up to
+// the real canvas size, so the picture just gets bigger (and stays sharp).
+
+function fitCanvas() {
+  const fullscreen = !!document.fullscreenElement;
+  document.body.classList.toggle("fullscreen", fullscreen);
+
+  // measure the compact strip (what fullscreen shows), then put the panel back in the right mode
+  const panel = document.getElementById("controls");
+  panel.classList.add("compact");
+  const stripHeight = panel.offsetHeight;
+  panel.classList.toggle("compact", fullscreen);
+
+  const aspect = screen.width / (screen.height - stripHeight); // the fullscreen canvas shape
+  H = Math.round(W / aspect);
+
+  const w = fullscreen
+    ? window.innerWidth
+    : Math.min(document.documentElement.clientWidth, window.innerHeight * aspect);
+  resizeCanvas(Math.floor(w), Math.floor(w / aspect));
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+}
+
+function setupSizing() {
+  window.addEventListener("resize", fitCanvas);
+  document.addEventListener("fullscreenchange", fitCanvas);
+  fitCanvas();
+}
+
+function keyPressed() {
+  if (key === "f" || key === "F") toggleFullscreen();
 }
 
 // ---------- Multi-touch input ----------
@@ -427,6 +474,7 @@ function draw() {
   pal = currentPalette();
   background(...pal.bg);
   noStroke();
+  scale(width / W); // draw in W x H coordinates whatever size the canvas is
 
   // draw order: blooms underneath, then orbits, fireworks on top
   drawLayer(blooms);
