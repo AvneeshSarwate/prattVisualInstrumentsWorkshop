@@ -14,9 +14,33 @@
 // Storing age pre-multiplied by coverage keeps it correct where the warp blends trail
 // pixels with empty ones: age = g / r.
 
+// Performance notes:
+// - The trail is drawn at TRAIL_DENSITY (1 = one trail pixel per CSS pixel, a quarter of the pixels
+//   of a 2× screen). It's a warped, smeared image, so the lower resolution barely shows; the crisp
+//   circles and the final output still use the full screen resolution.
+// - The 20 warp points are the same for every pixel, so they're computed once per frame here
+//   (warpPoints) and passed to the shader, instead of every pixel recomputing them with ~80 sin() calls.
+const TRAIL_DENSITY = 1;
+const WARP_POINTS = 20;
+
 let trailRead, trailWrite, feedbackShader, outputShader;
 let warpTime = 1000; // like liquidMaze's `time/5. + 1000.`; advances by warp speed
 let bandPhase = 0; // advances by band speed
+
+// from liquidMaze.glsl's coordWarp: point i moves on its own slow Lissajous-like path
+const warpRand = Array.from({ length: WARP_POINTS }, (_, i) => {
+  const x = Math.sin(i + 1) * 43758.5453; // rand(i + 1.) from the shader
+  return x - Math.floor(x);
+});
+function warpPoints(t2) {
+  const sinN = (x) => Math.sin(x) * 0.5 + 0.5;
+  const cosN = (x) => Math.cos(x) * 0.5 + 0.5;
+  const points = [];
+  for (let i = 0; i < WARP_POINTS; i++) {
+    points.push(sinN(t2 * warpRand[i] * 1.3 + i), cosN(t2 * warpRand[i] * 1.1 + i));
+  }
+  return points; // flat [x0, y0, x1, y1, ...] for the vec2 array uniform
+}
 
 // A plain quad: the fragment shaders work in screen pixels (gl_FragCoord).
 const POSTFX_VERT = `
@@ -46,27 +70,28 @@ vec4 circlesAt(sampler2D tex, vec2 uv) { return texture2D(tex, vec2(uv.x, 1.0 - 
 const FEEDBACK_FRAG = `${POSTFX_COMMON}
 uniform sampler2D uPrev;    // last frame's trail
 uniform sampler2D uCircles; // this frame's circles
-uniform float uWarpTime;
+uniform vec2 uPoints[${WARP_POINTS}]; // this frame's warp points (computed once per frame in JS)
 uniform float uDisplace;    // how far toward the warped coordinate to sample each frame
 uniform float uDt;          // seconds since last frame
 uniform float uCutoff;      // trail age (s) after which it's cut off
 
 // from liquidMaze.glsl: 20 moving points pull nearby coordinates toward them
-vec3 coordWarp(vec2 stN, float t2) {
+vec2 coordWarp(vec2 stN) {
   vec2 warp = stN;
   float rad = .5;
-  for (float i = 0.0; i < 20.; i++) {
-    vec2 p = vec2(sinN(t2 * rand(i + 1.) * 1.3 + i), cosN(t2 * rand(i + 1.) * 1.1 + i));
-    warp = length(p - stN) <= rad ? mix(warp, p, 1. - length(stN - p) / rad) : warp;
+  for (int i = 0; i < ${WARP_POINTS}; i++) {
+    vec2 p = uPoints[i];
+    float d = length(p - stN);
+    warp = d <= rad ? mix(warp, p, 1. - d / rad) : warp;
   }
-  return vec3(warp, distance(warp, stN));
+  return warp;
 }
 
 void main() {
   vec2 uv = uvN();
 
   // last frame, displaced
-  vec2 warped = mix(uv, coordWarp(uv, uWarpTime).xy, uDisplace);
+  vec2 warped = mix(uv, coordWarp(uv), uDisplace);
   vec4 prev = texture2D(uPrev, warped);
   float coverage = prev.r;
   float age = coverage > 0.001 ? prev.g / coverage + uDt : 0.0;
@@ -114,7 +139,7 @@ void main() {
 function setupPostFx() {
   // HALF_FLOAT: ages go above 1, and half floats can still be smoothly sampled by the warp.
   // Framebuffers follow the canvas size automatically (resizing clears the trail).
-  const options = { format: HALF_FLOAT, depth: false, antialias: false, textureFiltering: LINEAR };
+  const options = { format: HALF_FLOAT, depth: false, antialias: false, textureFiltering: LINEAR, density: TRAIL_DENSITY };
   trailRead = createFramebuffer(options);
   trailWrite = createFramebuffer(options);
   feedbackShader = createShader(POSTFX_VERT, FEEDBACK_FRAG);
@@ -128,14 +153,15 @@ function renderPostFx(circles) {
   warpTime += dt * param("trailWarpSpeed");
   bandPhase += dt * param("trailBandSpeed");
   const res = [width * pixelDensity(), height * pixelDensity()];
+  const trailRes = [width * TRAIL_DENSITY, height * TRAIL_DENSITY]; // the trail framebuffers' size
 
   // 2. feedback: last trail (displaced) + new circles -> this frame's trail
   trailWrite.begin();
   shader(feedbackShader);
-  feedbackShader.setUniform("uRes", res);
+  feedbackShader.setUniform("uRes", trailRes);
   feedbackShader.setUniform("uPrev", trailRead);
   feedbackShader.setUniform("uCircles", circles);
-  feedbackShader.setUniform("uWarpTime", warpTime);
+  feedbackShader.setUniform("uPoints", warpPoints(warpTime));
   feedbackShader.setUniform("uDisplace", param("trailDisplace"));
   feedbackShader.setUniform("uDt", dt);
   feedbackShader.setUniform("uCutoff", param("trailCutoff"));

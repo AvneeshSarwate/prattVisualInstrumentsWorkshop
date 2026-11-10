@@ -448,6 +448,7 @@ function fitCanvas() {
   const w = fullscreen
     ? window.innerWidth
     : Math.min(document.documentElement.clientWidth, window.innerHeight * aspect);
+  applyDensity(); // the screen's density changes with browser zoom (see Performance debugging)
   resizeCanvas(Math.floor(w), Math.floor(w / aspect));
   circleLayer.resizeCanvas(width, height);
 }
@@ -465,6 +466,42 @@ function setupSizing() {
 
 function keyPressed() {
   if (key === "f" || key === "F") toggleFullscreen();
+  if (key === "p" || key === "P") renderMode = (renderMode + 1) % RENDER_MODES.length;
+  if (key === "1") toggleLowDensity();
+}
+
+// ---------- Performance debugging ----------
+//
+// P cycles what gets rendered, 1 toggles 1× density. The current mode shows on the FPS meter (R).
+// Use these to find what's costing frame time:
+//   full            — everything (normal)
+//   circles only    — circle layer straight to the screen, no trail passes
+//   background only — just clear to the background color: if this is still slow, it's not the sketch
+
+const RENDER_MODES = ["full", "circles only", "background only"];
+let renderMode = 0;
+let lowDensity = false;
+
+// Render density = the screen's real pixel density, capped at MAX_DENSITY.
+// p5 would otherwise round the density *up* (1.6 → 2), drawing pixels the screen can't show.
+// 2× doesn't fit in a 60 fps frame on the Surface Pro 8 in fullscreen; 1.6× does.
+const MAX_DENSITY = 1.6;
+const renderDensity = () => (lowDensity ? 1 : Math.min(window.devicePixelRatio, MAX_DENSITY));
+
+function applyDensity() {
+  const density = renderDensity();
+  if (pixelDensity() !== density) pixelDensity(density);
+  if (circleLayer.pixelDensity() !== density) circleLayer.pixelDensity(density);
+}
+
+function toggleLowDensity() {
+  lowDensity = !lowDensity;
+  applyDensity();
+}
+
+// read by fps.js
+function perfLabel() {
+  return `${RENDER_MODES[renderMode]} · ${pixelDensity()}× (P, 1)`;
 }
 
 // ---------- Multi-touch input ----------
@@ -534,6 +571,11 @@ function drawLayer(layer) {
 
 function draw() {
   pal = currentPalette();
+  const mode = RENDER_MODES[renderMode]; // see Performance debugging
+  if (mode === "background only") {
+    background(...pal.bg);
+    return;
+  }
 
   // just the circles, on a transparent background (the background color is added in postfx.js)
   circleLayer.clear();
@@ -547,5 +589,10 @@ function draw() {
   drawLayer(fireworks);
   circleLayer.pop();
 
+  if (mode === "circles only") {
+    background(...pal.bg);
+    image(circleLayer, -width / 2, -height / 2, width, height); // WEBGL: origin is the centre
+    return;
+  }
   renderPostFx(circleLayer); // postfx.js: trails, bands, background, circles on top
 }
