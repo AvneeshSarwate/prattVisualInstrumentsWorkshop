@@ -6,8 +6,8 @@
 //   bottom third -> rising bloom circle from the press point
 //
 // Dragging before you release "throws" the gesture (see the Throw section):
-//   fireworks -> the burst leans in the drag direction
-//   orbit     -> the whole ring glides off in the drag direction
+//   fireworks -> the burst shoots in the drag direction: narrower and faster the longer the drag
+//   orbit     -> the whole ring glides off in the drag direction; a left throw spins it the other way
 //   bloom     -> the circle drifts sideways as it rises
 //
 // Each gesture is an async "coroutine": it snapshots the slider values,
@@ -41,11 +41,16 @@ const PARAM_GROUPS = [
     params: [
       { key: "fwVelocity", label: "launch velocity", min: 40, max: 900, value: 150, step: 10 },
       { key: "fwSize", label: "circle size", min: 2, max: 40, value: 10, step: 1 },
-      { key: "fwCount", label: "particles", min: 1, max: 40, value: 8, step: 1 },
+      // curve 2: the low end of the slider/knob is finer (4 → 8 particles is a big change, 30 → 34 isn't)
+      { key: "fwCount", label: "particles", min: 1, max: 40, value: 8, step: 1, curve: 2 },
       { key: "fwSpread", label: "fan spread ±°", min: 0, max: 180, value: 63, step: 1 },
       { key: "fwGravity", label: "gravity", min: 0, max: 1500, value: 300, step: 10 },
+      // scales velocity AND gravity together: bigger, faster arcs with the same timing (see launchFireworks)
+      { key: "fwDrama", label: "drama (×2 per unit)", min: -2, max: 2, value: 0, step: 0.01 },
       { key: "fwDuration", label: "lifetime (s)", min: 0.5, max: 10, value: 3, step: 0.1 },
-      { key: "fwTilt", label: "throw tilt °", min: 0, max: 90, value: 50, step: 1 },
+      { key: "fwThrowAim", label: "throw aim", min: 0, max: 1, value: 1, step: 0.01 },
+      { key: "fwThrowFocus", label: "throw focus", min: 0, max: 1, value: 0.7, step: 0.01 },
+      { key: "fwThrowBoost", label: "throw boost ×", min: 0, max: 3, value: 1, step: 0.05 },
       { key: "fwSpeedMin", label: "speed min ×", min: 0, max: 2, value: 0.5, step: 0.05 },
       { key: "fwSpeedMax", label: "speed max ×", min: 0, max: 2, value: 1.2, step: 0.05 },
       { key: "fwSizeJitter", label: "size variation ±", min: 0, max: 1, value: 0.2, step: 0.01 },
@@ -71,7 +76,7 @@ const PARAM_GROUPS = [
       { key: "orbitWarpAmount", label: "warp amount ×r", min: 0, max: 6, value: 3, step: 0.1 },
       { key: "orbitWarpFreq", label: "warp frequency", min: 0.1, max: 3, value: 0.6, step: 0.05 },
       { key: "orbitWarpFold", label: "warp swirl", min: 0, max: 5, value: 1.5, step: 0.1 },
-      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 0.1, value: 0.007, step: 0.001 },
+      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 1, value: 0.007, step: 0.001 },
     ],
   },
   {
@@ -82,7 +87,8 @@ const PARAM_GROUPS = [
       { key: "bloomPower", label: "rise acceleration", min: 1, max: 4, value: 2, step: 0.1 },
       { key: "bloomDuration", label: "rise time (s)", min: 0.5, max: 15, value: 5, step: 0.1 },
       { key: "bloomWobble", label: "wobble (px)", min: 0, max: 400, value: 120, step: 1 },
-      { key: "bloomLean", label: "throw lean (px)", min: 0, max: 800, value: 300, step: 10 },
+      { key: "bloomLean", label: "throw lean (px)", min: 0, max: 2000, value: 900, step: 10 },
+      { key: "bloomThrowRise", label: "throw rise speed", min: 0, max: 3, value: 1, step: 0.05 },
       { key: "bloomStartSize", label: "start size", min: 0, max: 80, value: 6, step: 1 },
       { key: "bloomEndSize", label: "end size", min: 2, max: 300, value: 80, step: 1 },
       { key: "bloomAlpha", label: "opacity", min: 0, max: 255, value: 200, step: 1 },
@@ -102,7 +108,7 @@ const PARAM_GROUPS = [
       // trails: see postfx.js
       { key: "trailDisplace", label: "trail displacement", min: 0, max: 0.05, value: 0.01, step: 0.0005 },
       { key: "trailBandFreq", label: "band frequency", min: 0, max: 60, value: 12, step: 0.5 },
-      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 10, value: 2, step: 0.05 },
+      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 2, value: 2, step: 0.001 },
       { key: "colorNoise", label: "color noise", min: 0, max: 80, value: 20, step: 1 },
       { key: "throwDrag", label: "full-throw drag (px)", min: 50, max: 1000, value: 300, step: 10 },
       { key: "heavyArea", label: "heavy touch area (px²)", min: 0, max: 15000, value: 8000, step: 50 },
@@ -202,24 +208,39 @@ function glide(speed, friction, seconds) {
 
 async function launchFireworks(x0, y0, throwVec, heavy) {
   // snapshot params for this gesture
-  const baseVelocity = param("fwVelocity"); // pixels per second
+  // Drama: multiply velocity and gravity by the same factor s. The peak height (v²/2g) grows by s,
+  // but the time to reach it (v/g) stays the same — so the burst goes higher and falls faster,
+  // in the same amount of time. drama 0 = ×1, +1 = ×2, +2 = ×4, -1 = ×½.
+  const drama = pow(2, param("fwDrama"));
+  const baseVelocity = param("fwVelocity") * drama; // pixels per second
   const baseSize = param("fwSize");
   const count = param("fwCount");
-  const spread = radians(param("fwSpread")); // half-width of the upward fan
+  const spread = radians(param("fwSpread")); // half-width of the fan (before the throw narrows it)
   const speedMin = param("fwSpeedMin");
   const speedMax = param("fwSpeedMax");
   const sizeJitter = param("fwSizeJitter");
   const duration = param("fwDuration") * 1000; // ms
-  const gravity = param("fwGravity"); // pixels per second^2 — shared, so they all fall together
+  const gravity = param("fwGravity") * drama; // pixels per second^2 — shared, so they all fall together
 
-  // throw: dragging sideways tilts the whole fan that way
-  const tilt = throwVec.x * radians(param("fwTilt"));
+  // throw: the harder the throw (strength 0..1), the more the burst
+  //   aim   — turns from straight up toward the drag direction (aim 1 = all the way)
+  //   focus — narrows the fan (focus 1 = a single line at full strength)
+  //   boost — launches faster (boost 1 = twice as fast at full strength)
+  const strength = sqrt(throwVec.x * throwVec.x + throwVec.y * throwVec.y);
+  const up = -HALF_PI; // screen y points down
+  let center = up;
+  if (strength > 0) {
+    const dragAngle = atan2(throwVec.y, throwVec.x);
+    const turn = atan2(sin(dragAngle - up), cos(dragAngle - up)); // shortest turn from up, -PI..PI
+    center = up + turn * strength * param("fwThrowAim");
+  }
+  const fan = spread * (1 - strength * param("fwThrowFocus"));
+  const boost = 1 + strength * param("fwThrowBoost");
 
   const particles = [];
   for (let i = 0; i < count; i++) {
-    // upward fan (screen y points down), centered on straight up plus the tilt
-    const angle = -HALF_PI + tilt + random(-spread, spread);
-    const speed = baseVelocity * random(speedMin, speedMax);
+    const angle = center + random(-fan, fan);
+    const speed = baseVelocity * boost * random(speedMin, speedMax);
     particles.push({
       vx: cos(angle) * speed,
       vy: sin(angle) * speed,
@@ -276,7 +297,9 @@ function domainWarp(x, y, t, seed, freq, fold) {
 async function launchOrbit(x0, y0, throwVec, heavy) {
   const fadeIn = param("orbitFadeIn") * 1000; // ms
   const speedJitter = param("orbitSpeedJitter");
-  const speed = param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
+  // throw direction picks the spin: a throw to the left reverses the rotation
+  const spin = throwVec.x < 0 ? -1 : 1;
+  const speed = spin * param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
   const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
   const count = param("orbitCount");
   const fullRadius = param("orbitRadius");
@@ -345,7 +368,11 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
 
 async function launchBloom(x0, y0, throwVec, heavy) {
   const power = param("bloomPower"); // 1 = constant speed, >1 = accelerates
-  const duration = param("bloomDuration") * 1000; // ms
+
+  // throw, up/down: swiping up makes it rise faster, swiping down slower.
+  // At full strength with throw rise speed 1, an upward swipe halves the rise time.
+  const riseScale = pow(2, throwVec.y * param("bloomThrowRise")); // throwVec.y < 0 = up
+  const duration = param("bloomDuration") * 1000 * riseScale; // ms
   const travel = y0 + param("bloomOvershoot"); // rise until just past the top edge
   const wobble = param("bloomWobble"); // pixels
   const wobbleSpeed = param("bloomWobbleSpeed"); // noise steps per second
@@ -356,7 +383,7 @@ async function launchBloom(x0, y0, throwVec, heavy) {
   const fadeStart = param("bloomFadeStart"); // fraction of the rise when fading begins
   const seed = random(1000);
 
-  // throw: dragging sideways makes the circle drift that way as it rises
+  // throw, sideways: the circle drifts that way — fast right after release, then easing off
   const lean = throwVec.x * param("bloomLean"); // pixels of sideways drift over the whole rise
 
   const id = newId();
@@ -371,7 +398,7 @@ async function launchBloom(x0, y0, throwVec, heavy) {
 
     const y = y0 - travel * pow(phase, power);
     const wobbleX = (noise(seed, (elapsed / 1000) * wobbleSpeed + y * wobbleStretch) - 0.5) * wobble; // noise of time + y
-    const x = x0 + wobbleX + lean * phase;
+    const x = x0 + wobbleX + lean * (1 - pow(1 - phase, 2)); // ease-out, like something thrown
     const d = lerp(startSize, endSize, 1 - pow(1 - phase, 2));
     const alpha = phase < fadeStart ? peakAlpha : map(phase, fadeStart, 1, peakAlpha, 0);
 
