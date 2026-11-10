@@ -1,24 +1,34 @@
-// Slider panel.
+// Slider panel + palette editor.
 //
 // - One card per parameter group (PARAM_GROUPS in sketch.js).
 // - Drag a slider by its ⋮⋮ handle to reorder it within its card.
 // - The first 4 sliders of each card follow the 4 BeatStep knobs of that card's knob set.
 // - Double-click a slider's name to reset it to its default.
-// - Slider order and learned knob CCs are saved to config.json by the dev server (npm run dev).
+//
+// Base vs live values:
+//   base = the slider. This is what gets saved.
+//   live = what the sketch actually uses. Knobs nudge the live value (the bar under the slider);
+//          moving the slider sets the base and snaps live back to it.
+//   Only the 4 knob-mapped sliders can have live ≠ base; a slider dragged out of those 4
+//   snaps back to its base.
+//
+// Autosave: every 5 s, if anything changed, base values, slider order, knob CCs and palettes
+// are sent to the dev server (npm run dev), which writes them to config.json.
 
 const KNOBS_PER_SET = 4;
 const KNOB_COUNT = 16;
 const KNOB_TICKS_FULL_RANGE = 100; // knob ticks to sweep a slider end to end — lower = more sensitive
+const AUTOSAVE_MS = 5000;
 
-// key -> { def, value, set(v), row, ... }. param(key) is what the sketch calls every frame.
+// key -> { def, base, live, setBase(v), setLive(v), ... }. param(key) is what the sketch calls.
 const params = {};
-const param = (key) => params[key].value;
+const param = (key) => params[key].live;
 
-let config = {}; // contents of config.json: { order: { groupId: [keys] }, knobCCs: [16 numbers] }
+let palettes = []; // the PALETTES array from sketch.js — the editor changes it in place
 let knobCCs = DEFAULT_KNOB_CCS.slice();
 const rowsBySet = new Map(); // knobSet -> the .rows element of that card
 let learning = null; // while learning knobs: the CCs heard so far, in order
-const ui = {}; // status bar elements
+const ui = {}; // status bar + palette editor elements
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -29,9 +39,15 @@ function el(tag, className, text) {
 
 // ---------- Build ----------
 
-async function buildControls(groups, canvasEl) {
-  config = await loadConfig();
+async function buildControls(groups, paletteList, canvasEl) {
+  palettes = paletteList;
+  const config = await loadConfig();
   if (Array.isArray(config.knobCCs) && config.knobCCs.length === KNOB_COUNT) knobCCs = config.knobCCs;
+  const savedPalettes = (config.palettes ?? []).map(paletteFromHex).filter(Boolean);
+  if (savedPalettes.length) palettes.splice(0, palettes.length, ...savedPalettes);
+
+  // the palette morph slider spans however many palettes there are
+  groups.flatMap((g) => g.params).find((p) => p.key === "palette").max = palettes.length - 1;
 
   const panel = el("div");
   panel.id = "controls";
@@ -40,10 +56,10 @@ async function buildControls(groups, canvasEl) {
   const bar = el("div", "bar");
   ui.devices = el("span", "devices", "MIDI: connecting…");
   ui.last = el("span", "last", "turn a knob");
-  ui.learn = el("button", "learn", "learn knobs");
+  ui.learn = el("button", "button", "learn knobs");
   ui.learn.addEventListener("click", toggleLearn);
   ui.note = el("span", "note");
-  const fullscreenBtn = el("button", "learn", "fullscreen (F)");
+  const fullscreenBtn = el("button", "button", "fullscreen (F)");
   fullscreenBtn.addEventListener("click", toggleFullscreen);
   bar.append(ui.devices, ui.last, ui.learn, fullscreenBtn, ui.note);
 
@@ -51,19 +67,20 @@ async function buildControls(groups, canvasEl) {
   const exitBtn = el("button", "exit-fullscreen", "✕");
   exitBtn.title = "exit fullscreen";
   exitBtn.addEventListener("click", toggleFullscreen);
-  panel.append(exitBtn);
 
   const grid = el("div", "groups");
-  for (const group of groups) grid.append(buildGroup(group, config.order?.[group.id] ?? []));
-  panel.append(bar, grid);
+  for (const group of groups) grid.append(buildGroup(group, config.order?.[group.id] ?? [], config.values ?? {}));
+
+  panel.append(bar, grid, buildPaletteEditor(), exitBtn);
 
   setupMidi(handleCC, (names, error) => {
     ui.devices.textContent = error ?? (names.length ? `MIDI: ${names.join(", ")}` : "MIDI: no devices connected");
     ui.devices.classList.toggle("ok", !error && names.length > 0);
   });
+  setupAutosave();
 }
 
-function buildGroup(group, savedOrder) {
+function buildGroup(group, savedOrder, savedValues) {
   const card = el("section", "group");
   const firstKnob = (group.knobSet - 1) * KNOBS_PER_SET + 1;
   const title = el("h3");
@@ -79,15 +96,15 @@ function buildGroup(group, savedOrder) {
   const rows = el("div", "rows");
   rows.dataset.group = group.id;
   rows.dataset.knobSet = group.knobSet;
-  for (const key of keys) rows.append(buildRow(byKey.get(key)));
+  for (const key of keys) rows.append(buildRow(byKey.get(key), savedValues[key]));
   rowsBySet.set(group.knobSet, rows);
-  refreshBadges(rows);
+  refreshRows(rows);
 
   card.append(title, rows);
   return card;
 }
 
-function buildRow(def) {
+function buildRow(def, savedBase) {
   const row = el("div", "row");
   row.dataset.key = def.key;
 
@@ -97,37 +114,63 @@ function buildRow(def) {
   const label = el("span", "label", def.label);
   label.title = `${def.label} — double-click to reset`;
 
+  // the slider (base value), with the live-value bar right under it
+  const track = el("div", "track");
   const input = el("input");
   Object.assign(input, { type: "range", min: def.min, max: def.max, step: def.step });
-  const readout = el("span", "value");
+  const liveBar = el("div", "live");
+  const liveFill = el("div", "fill");
+  liveBar.append(liveFill);
+  track.append(input, liveBar);
 
+  const readout = el("span", "value"); // shows the live value
   const decimals = (String(def.step).split(".")[1] ?? "").length;
+  const clamp = (v) => Math.min(def.max, Math.max(def.min, v));
+
   const p = {
     def,
     row,
     readout,
-    value: def.value,
-    set(v) {
-      p.value = v;
-      input.value = v;
-      readout.textContent = v.toFixed(decimals);
+    base: def.value,
+    live: def.value,
+    setLive(v) {
+      p.live = clamp(v);
+      const span = def.max - def.min;
+      liveFill.style.width = `${span > 0 ? ((p.live - def.min) / span) * 100 : 0}%`;
+      readout.textContent = p.live.toFixed(decimals);
+      row.classList.toggle("offbase", p.live !== p.base);
+    },
+    setBase(v, save = true) {
+      p.base = clamp(v);
+      input.value = p.base;
+      p.setLive(p.base);
+      if (save) markDirty();
+    },
+    setMax(max) {
+      def.max = max;
+      input.max = max;
+      p.setBase(p.base);
     },
   };
-  input.addEventListener("input", () => p.set(Number(input.value)));
-  label.addEventListener("dblclick", () => p.set(def.value));
-  p.set(def.value);
+  input.addEventListener("input", () => p.setBase(Number(input.value)));
+  label.addEventListener("dblclick", () => p.setBase(def.value));
+  p.setBase(typeof savedBase === "number" ? savedBase : def.value, false);
   params[def.key] = p;
 
   makeDraggable(row, handle);
-  row.append(handle, badge, label, input, readout);
+  row.append(handle, badge, label, track, readout);
   return row;
 }
 
-// K-numbers on the first 4 rows of a card, blank on the rest.
-function refreshBadges(rows) {
+// After any reorder: K-numbers on the first 4 rows of a card, and rows that are no longer
+// on a knob drop their live offset.
+function refreshRows(rows) {
   const set = Number(rows.dataset.knobSet);
   [...rows.children].forEach((row, i) => {
-    row.querySelector(".badge").textContent = i < KNOBS_PER_SET ? `K${(set - 1) * KNOBS_PER_SET + i + 1}` : "";
+    const mapped = i < KNOBS_PER_SET;
+    row.querySelector(".badge").textContent = mapped ? `K${(set - 1) * KNOBS_PER_SET + i + 1}` : "";
+    const p = params[row.dataset.key];
+    if (!mapped && p.live !== p.base) p.setLive(p.base);
   });
 }
 
@@ -155,7 +198,7 @@ function makeDraggable(row, handle) {
         const next = [...rows.children].find((r) => r !== row && e.clientY < middleY(r)) ?? null;
         if (next !== row.nextElementSibling) {
           rows.insertBefore(row, next);
-          refreshBadges(rows);
+          refreshRows(rows);
         }
       },
       { signal: stop.signal }
@@ -163,7 +206,7 @@ function makeDraggable(row, handle) {
     const end = () => {
       stop.abort();
       row.classList.remove("dragging");
-      if (keysOf(rows).join() !== before) saveConfig({ order: currentOrder() }, "slider order");
+      if (keysOf(rows).join() !== before) markDirty();
     };
     handle.addEventListener("pointerup", end, { signal: stop.signal });
     handle.addEventListener("pointercancel", end, { signal: stop.signal });
@@ -193,15 +236,15 @@ function handleCC(cc, value, channel) {
   }
 
   // The knobs are endless encoders in relative mode: 65 = one tick up, 63 = one tick down
-  // (with acceleration, faster turns send values further from 64).
+  // (with acceleration, faster turns send values further from 64). They move the live value only.
   const ticks = value - 64;
   if (ticks === 0) return;
   const p = params[row.dataset.key];
   const { min, max, step } = p.def;
   const tickSize = Math.max(step, (max - min) / KNOB_TICKS_FULL_RANGE); // always at least one step
-  const raw = p.value + ticks * tickSize;
+  const raw = p.live + ticks * tickSize;
   const snapped = min + Math.round((raw - min) / step) * step;
-  p.set(Math.min(max, Math.max(min, Number(snapped.toFixed(6)))));
+  p.setLive(Number(snapped.toFixed(6)));
 
   row.classList.remove("hit");
   void row.offsetWidth; // restart the flash animation
@@ -226,10 +269,106 @@ function learnCC(cc) {
   knobCCs = learning;
   toggleLearn();
   ui.last.textContent = `learned knobs: ${knobCCs.join(", ")}`;
-  saveConfig({ knobCCs }, "knob CCs");
+  markDirty();
 }
 
-// ---------- config.json via the dev server ----------
+// ---------- Palette editor ----------
+//
+// One row per palette: background, light-touch and heavy-touch colors.
+// The palette morph slider blends between neighbouring rows (0 = first row).
+
+const toHex = (rgb) => "#" + rgb.map((c) => Math.round(c).toString(16).padStart(2, "0")).join("");
+const fromHex = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const isHex = (s) => typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s);
+const paletteToHex = (p) => ({ bg: toHex(p.bg), light: toHex(p.light), heavy: toHex(p.heavy) });
+const paletteFromHex = (p) =>
+  p && isHex(p.bg) && isHex(p.light) && isHex(p.heavy)
+    ? { bg: fromHex(p.bg), light: fromHex(p.light), heavy: fromHex(p.heavy) }
+    : null;
+const copyPalette = (p) => ({ bg: [...p.bg], light: [...p.light], heavy: [...p.heavy] });
+
+function buildPaletteEditor() {
+  const section = el("section", "group palettes");
+  const title = el("h3");
+  title.append(el("span", null, "Palettes"), el("span", "knobs", "palette morph blends between these"));
+  ui.paletteList = el("div", "palette-list");
+  const add = el("button", "button", "+ new palette");
+  add.addEventListener("click", () => {
+    palettes.push(copyPalette(palettes[palettes.length - 1]));
+    palettesChanged();
+  });
+  section.append(title, ui.paletteList, add);
+  renderPalettes();
+  return section;
+}
+
+function renderPalettes() {
+  ui.paletteList.replaceChildren(...palettes.map(paletteRow));
+}
+
+function paletteRow(pal, i) {
+  const row = el("div", "palette-row");
+  row.append(el("span", "idx", String(i)));
+
+  for (const role of ["bg", "light", "heavy"]) {
+    const swatch = el("label", "swatch");
+    const input = el("input");
+    input.type = "color";
+    input.value = toHex(pal[role]);
+    input.addEventListener("input", () => {
+      pal[role] = fromHex(input.value);
+      markDirty();
+    });
+    swatch.append(input, el("span", null, role));
+    row.append(swatch);
+  }
+
+  const actions = [
+    ["show", "set palette morph to this palette", () => params.palette.setBase(i)],
+    [
+      "copy",
+      "duplicate this palette",
+      () => {
+        palettes.splice(i + 1, 0, copyPalette(pal));
+        palettesChanged();
+      },
+    ],
+    [
+      "✕",
+      "delete this palette",
+      () => {
+        if (palettes.length === 1) return; // always keep at least one
+        palettes.splice(i, 1);
+        palettesChanged();
+      },
+    ],
+  ];
+  for (const [text, tip, onClick] of actions) {
+    const btn = el("button", "button small", text);
+    btn.title = tip;
+    btn.addEventListener("click", onClick);
+    row.append(btn);
+  }
+  return row;
+}
+
+function palettesChanged() {
+  params.palette.setMax(palettes.length - 1);
+  renderPalettes();
+  markDirty();
+}
+
+// ---------- Saving to config.json via the dev server ----------
+
+let dirty = false;
+let warnedNoServer = false;
+const markDirty = () => (dirty = true);
+
+function configSnapshot() {
+  const values = {};
+  for (const [key, p] of Object.entries(params)) values[key] = p.base;
+  return { order: currentOrder(), knobCCs, values, palettes: palettes.map(paletteToHex) };
+}
 
 async function loadConfig() {
   try {
@@ -240,19 +379,31 @@ async function loadConfig() {
   }
 }
 
-async function saveConfig(patch, what) {
-  Object.assign(config, patch);
+async function saveToServer() {
+  dirty = false;
   try {
     const res = await fetch("/config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config),
+      body: JSON.stringify(configSnapshot()),
     });
     if (!res.ok) throw new Error(res.status);
-    showNote(`saved ${what}`);
+    showNote("saved");
   } catch {
-    showNote("not saved — start the page with npm run dev");
+    dirty = true; // try again next time
+    if (!warnedNoServer) showNote("not saving — start the page with npm run dev");
+    warnedNoServer = true;
   }
+}
+
+function setupAutosave() {
+  setInterval(() => dirty && saveToServer(), AUTOSAVE_MS);
+  // closing or reloading the page: send any unsaved changes right away
+  window.addEventListener("pagehide", () => {
+    if (!dirty) return;
+    const body = new Blob([JSON.stringify(configSnapshot())], { type: "application/json" });
+    navigator.sendBeacon("/config", body);
+  });
 }
 
 let noteTimer;

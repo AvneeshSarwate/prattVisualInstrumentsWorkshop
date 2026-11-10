@@ -102,7 +102,7 @@ body.fullscreen .exit-fullscreen {
 .bar .note {
   color: var(--accent);
 }
-.learn {
+.button {
   font: inherit;
   color: var(--text);
   background: var(--card);
@@ -111,7 +111,11 @@ body.fullscreen .exit-fullscreen {
   padding: 3px 10px;
   cursor: pointer;
 }
-.learn.active {
+.button.small {
+  padding: 1px 7px;
+  font-size: 11px;
+}
+.button.active {
   background: var(--accent);
   color: var(--bg);
 }
@@ -202,13 +206,81 @@ body.fullscreen .exit-fullscreen {
   text-overflow: ellipsis;
   user-select: none;
 }
+.track {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .row input[type="range"] {
   width: 100%;
   margin: 0;
   accent-color: var(--accent);
 }
+/* live value (what the knob has done), under the base slider — only on knob-mapped rows */
+.live {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.live .fill {
+  height: 100%;
+  background: var(--dim);
+}
+.row.offbase .live .fill {
+  background: var(--accent);
+}
+.row:nth-child(n + 5) .live {
+  display: none;
+}
 .value {
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--dim);
+}
+.row.offbase .value {
+  color: var(--accent);
+}
+
+/* ---------- palette editor ---------- */
+.palettes {
+  margin-top: 12px;
+  max-width: 560px;
+}
+.palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.palette-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+.palette-row .idx {
+  width: 14px;
+  color: var(--dim);
+  text-align: right;
+}
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--dim);
+  font-size: 11px;
+  width: 78px;
+}
+.swatch input[type="color"] {
+  width: 32px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+}
+#controls.compact .palettes {
+  display: none;
 }

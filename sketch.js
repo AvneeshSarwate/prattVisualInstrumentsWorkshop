@@ -94,9 +94,11 @@ const PARAM_GROUPS = [
     title: "Palette & throw",
     knobSet: 4,
     params: [
+      // max is set to (number of palettes - 1) when the panel is built
       { key: "palette", label: "palette morph", min: 0, max: 3, value: 0, step: 0.01 },
       { key: "colorNoise", label: "color noise", min: 0, max: 80, value: 20, step: 1 },
       { key: "throwDrag", label: "full-throw drag (px)", min: 50, max: 1000, value: 300, step: 10 },
+      { key: "heavyArea", label: "heavy touch area (px²)", min: 0, max: 15000, value: 8000, step: 50 },
     ],
   },
 ];
@@ -111,13 +113,16 @@ const nextFrame = () => new Promise(requestAnimationFrame);
 let idCounter = 0;
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : String(idCounter++));
 
-// ---------- Palettes (background vs circles) ----------
+// ---------- Palettes (background, light-touch circles, heavy-touch circles) ----------
+//
+// These are the defaults. Edit them live in the palette editor under the sliders;
+// with `npm run dev` your edited palettes are saved to config.json and replace these.
 
 const PALETTES = [
-  { bg: [8, 10, 28], fg: [190, 205, 255] }, // moonlit night
-  { bg: [28, 10, 38], fg: [255, 185, 220] }, // dusk rose
-  { bg: [4, 30, 36], fg: [165, 255, 225] }, // deep water
-  { bg: [238, 232, 216], fg: [40, 52, 95] }, // paper and ink
+  { bg: [8, 10, 28], light: [190, 205, 255], heavy: [255, 210, 140] }, // moonlit night
+  { bg: [28, 10, 38], light: [255, 185, 220], heavy: [255, 240, 170] }, // dusk rose
+  { bg: [4, 30, 36], light: [165, 255, 225], heavy: [255, 150, 120] }, // deep water
+  { bg: [238, 232, 216], light: [40, 52, 95], heavy: [190, 40, 40] }, // paper and ink
 ];
 
 let pal = PALETTES[0]; // recomputed every frame from the palette slider
@@ -128,19 +133,23 @@ function lerpRGB(a, b, t) {
 
 // Palette slider goes 0 .. PALETTES.length - 1; fractional values morph between neighbours.
 function currentPalette() {
-  const k = param("palette");
+  const k = constrain(param("palette"), 0, PALETTES.length - 1);
   const i = floor(k);
   const j = min(i + 1, PALETTES.length - 1);
   const t = k - i;
-  return { bg: lerpRGB(PALETTES[i].bg, PALETTES[j].bg, t), fg: lerpRGB(PALETTES[i].fg, PALETTES[j].fg, t) };
+  const a = PALETTES[i];
+  const b = PALETTES[j];
+  return { bg: lerpRGB(a.bg, b.bg, t), light: lerpRGB(a.light, b.light, t), heavy: lerpRGB(a.heavy, b.heavy, t) };
 }
 
-// Each circle has its own seed, so color noise gives every circle a slightly different shade.
-function circleColor(seed, alpha) {
+// Base color depends on the touch (light or heavy). Each circle has its own seed,
+// so color noise gives every circle a slightly different shade of that base.
+function circleColor(seed, alpha, heavy) {
+  const base = heavy ? pal.heavy : pal.light;
   const amount = param("colorNoise");
-  const r = pal.fg[0] + (noise(seed, 0) - 0.5) * 2 * amount;
-  const g = pal.fg[1] + (noise(seed, 10) - 0.5) * 2 * amount;
-  const b = pal.fg[2] + (noise(seed, 20) - 0.5) * 2 * amount;
+  const r = base[0] + (noise(seed, 0) - 0.5) * 2 * amount;
+  const g = base[1] + (noise(seed, 10) - 0.5) * 2 * amount;
+  const b = base[2] + (noise(seed, 20) - 0.5) * 2 * amount;
   return [r, g, b, alpha];
 }
 
@@ -153,8 +162,14 @@ function circleColor(seed, alpha) {
 // Gestures launch on release, so a plain click still works — it's just a throw of 0.
 
 // One entry per finger (or mouse) currently pressed on the canvas.
-// key = pointerId, value = { x, y } where that press started.
+// key = pointerId, value = { x, y, peakArea }: where the press started, and the biggest
+// contact area (w × h, in CSS px²) the finger made during it.
 const presses = new Map();
+
+// Heavy vs light touch: pressing harder flattens the fingertip, so the contact patch gets bigger.
+// The screen can't measure force, but it does report contact size (see touchdebug.js, key D).
+// A mouse always reports 1 × 1, so mouse clicks are always light.
+const isHeavy = (press) => press.peakArea >= param("heavyArea");
 
 function throwFromDrag(startX, startY, endX, endY) {
   const dx = endX - startX;
@@ -174,7 +189,7 @@ function glide(speed, friction, seconds) {
 
 // ---------- Gesture: fireworks ----------
 
-async function launchFireworks(x0, y0, throwVec) {
+async function launchFireworks(x0, y0, throwVec, heavy) {
   // snapshot params for this gesture
   const baseVelocity = param("fwVelocity"); // pixels per second
   const baseSize = param("fwSize");
@@ -203,7 +218,7 @@ async function launchFireworks(x0, y0, throwVec) {
   }
 
   const id = newId();
-  const data = { circles: [] };
+  const data = { heavy, circles: [] }; // heavy = drawn in the palette's heavy-touch color
   fireworks.set(id, data);
 
   const startTime = performance.now();
@@ -247,7 +262,7 @@ function domainWarp(x, y, t, seed, freq, fold) {
 
 // ---------- Gesture: orbit around the center ----------
 
-async function launchOrbit(x0, y0, throwVec) {
+async function launchOrbit(x0, y0, throwVec, heavy) {
   const fadeIn = param("orbitFadeIn") * 1000; // ms
   const speedJitter = param("orbitSpeedJitter");
   const speed = param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
@@ -276,7 +291,7 @@ async function launchOrbit(x0, y0, throwVec) {
   const seeds = Array.from({ length: count }, () => random(1000));
 
   const id = newId();
-  const data = { circles: [] };
+  const data = { heavy, circles: [] }; // heavy = drawn in the palette's heavy-touch color
   orbits.set(id, data);
 
   const startTime = performance.now();
@@ -317,7 +332,7 @@ async function launchOrbit(x0, y0, throwVec) {
 
 // ---------- Gesture: rising bloom ----------
 
-async function launchBloom(x0, y0, throwVec) {
+async function launchBloom(x0, y0, throwVec, heavy) {
   const power = param("bloomPower"); // 1 = constant speed, >1 = accelerates
   const duration = param("bloomDuration") * 1000; // ms
   const travel = y0 + param("bloomOvershoot"); // rise until just past the top edge
@@ -334,7 +349,7 @@ async function launchBloom(x0, y0, throwVec) {
   const lean = throwVec.x * param("bloomLean"); // pixels of sideways drift over the whole rise
 
   const id = newId();
-  const data = { circles: [] };
+  const data = { heavy, circles: [] }; // heavy = drawn in the palette's heavy-touch color
   blooms.set(id, data);
 
   const startTime = performance.now();
@@ -362,7 +377,7 @@ async function setup() {
   const canvas = createCanvas(W, H);
   describe("Circles on a dark background: fireworks, orbiting rings and rising blooms appear when you click.");
 
-  await buildControls(PARAM_GROUPS, canvas.elt); // controls.js — sliders + BeatStep knobs
+  await buildControls(PARAM_GROUPS, PALETTES, canvas.elt); // controls.js — sliders, knobs, palette editor
   setupPointers(canvas.elt);
   setupSizing();
 }
@@ -432,7 +447,13 @@ function setupPointers(el) {
     if (e.pointerType === "mouse" && e.button !== 0) return; // left mouse button only
     e.preventDefault();
     el.setPointerCapture(e.pointerId); // keep getting this finger's events even off the canvas
-    presses.set(e.pointerId, canvasPoint(el, e));
+    presses.set(e.pointerId, { ...canvasPoint(el, e), peakArea: e.width * e.height });
+  });
+
+  // The contact patch keeps growing after the finger lands, so track its biggest size.
+  el.addEventListener("pointermove", (e) => {
+    const press = presses.get(e.pointerId);
+    if (press) press.peakArea = max(press.peakArea, e.width * e.height);
   });
 
   // Release (anywhere, thanks to pointer capture) -> launch that finger's gesture.
@@ -443,7 +464,7 @@ function setupPointers(el) {
 
     const end = canvasPoint(el, e);
     const throwVec = throwFromDrag(press.x, press.y, end.x, end.y);
-    launchGesture(press.x, press.y, throwVec);
+    launchGesture(press.x, press.y, throwVec, isHeavy(press));
   });
 
   // The OS took over this touch (e.g. a system gesture): just forget it.
@@ -451,20 +472,20 @@ function setupPointers(el) {
 }
 
 // Which gesture launches depends on where the press started.
-function launchGesture(x, y, throwVec) {
+function launchGesture(x, y, throwVec, heavy) {
   if (y < H / 3) {
-    launchFireworks(x, y, throwVec);
+    launchFireworks(x, y, throwVec, heavy);
   } else if (y < (2 * H) / 3) {
-    launchOrbit(x, y, throwVec);
+    launchOrbit(x, y, throwVec, heavy);
   } else {
-    launchBloom(x, y, throwVec);
+    launchBloom(x, y, throwVec, heavy);
   }
 }
 
 function drawLayer(layer) {
   for (const gesture of layer.values()) {
     for (const c of gesture.circles) {
-      fill(...circleColor(c.seed, c.alpha));
+      fill(...circleColor(c.seed, c.alpha, gesture.heavy));
       circle(c.x, c.y, c.d);
     }
   }
