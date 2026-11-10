@@ -1,413 +1,413 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./highlights-BMyo_AgY.js","./stream-tokenizer-CykQjydJ.js","./shiki-DmwTAdoJ.js","./core-PQVtDlm_.js"])))=>i.map(i=>d[i]);
-import{n as e,r as t,t as n}from"./rolldown-runtime-XKyaHtl9.js";(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),t.credentials=e.crossOrigin===`use-credentials`?`include`:e.crossOrigin===`anonymous`?`omit`:`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var r=`github-dark-default`,i=`#0d1117`,a=Object.assign({"../sketches/sketch-1.js":`// Circle
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  circle(width / 2, height / 2, 133);
-}
-`,"../sketches/sketch-2.js":`// Circle, moving back and forth
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  circle(width / 2 + sin(millis() / 500) * 133, height / 2, 133);
-}
-`,"../sketches/sketch-3.js":`// Circle launched from a mouse press
-let circleX = null;
-let circleY = null;
-
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circle
-  if (circleX !== null) {
-    circleX = circleX + 5;
-  }
-  // clear circle
-  if (circleX > width) {
-    circleX = null;
-  }
-  // draw circle
-  if (circleX !== null) {
-    circle(circleX, circleY, 133);
-  }
-}
-
-function mousePressed() {
-  circleX = mouseX;
-  circleY = mouseY;
-}
-`,"../sketches/sketch-4.js":`// Circles launched from mouse presses, stored in an array
-let circles = [];
-
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circles
-  for (let i = 0; i < circles.length; i++) {
-    circles[i].x = circles[i].x + 5;
-  }
-  // clear circles
-  // loop backwards so removing a circle doesn't skip the next one
-  for (let i = circles.length - 1; i >= 0; i--) {
-    if (circles[i].x > width) {
-      circles.splice(i, 1);
-    }
-  }
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, 133);
-  }
-}
-
-function mousePressed() {
-  circles.push({ x: mouseX, y: mouseY });
-}
-`,"../sketches/sketch-4.vs-3.js":`// Circles launched from mouse presses, stored in an array
-let circles = [];
-
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circle
-  for (let i = 0; i < circles.length; i++) {
-    circles[i].x = circles[i].x + 5;
-  }
-  // clear circle
-  // loop backwards so removing a circle doesn't skip the next one
-  for (let i = circles.length - 1; i >= 0; i--) {
-    if (circles[i].x > width) {
-      circles.splice(i, 1);
-    }
-  }
-  // draw circle
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, 133);
-  }
-}
-
-function mousePressed() {
-  circles.push({ x: mouseX, y: mouseY });
-}
-`,"../sketches/sketch-5.js":`// Circles launched from mouse presses, organized into functions
-let circles = [];
-
-function setup() {
-  createCanvas(640, 360);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circles
-  updateAllCircles();
-  // clear circles
-  cleanUpAllCircles();
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, 133);
-  }
-}
-
-function mousePressed() {
-  createCircle(mouseX, mouseY)
-}
-
-function createCircle(x, y) {
-  const newCircle = { x: x, y: y }
-  circles.push(newCircle)
-}
-
-function updateCircle(c) {
-  c.x = c.x + 5;
-}
-
-function isOffScreen(c) {
-  return c.x > width;
-}
-
-function updateAllCircles() {
-  for (let i = 0; i < circles.length; i++) {
-    updateCircle(circles[i]);
-  }
-}
-
-function cleanUpAllCircles() {
-  let onScreenCircles = [];
-  for (let i = 0; i < circles.length; i++) {
-    if (!isOffScreen(circles[i])) {
-      onScreenCircles.push(circles[i]);
-    }
-  }
-  circles = onScreenCircles;
-}
-`,"../sketches/sketch-6.js":`// Circles launched from mouse presses, with a slider for the radius
-let circles = [];
-let radiusSlider;
-
-function setup() {
-  createCanvas(640, 360);
-  radiusSlider = createSlider(7, 133, 33);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  let radius = radiusSlider.value();
-  // update circles
-  updateAllCircles();
-  // clear circles
-  cleanUpAllCircles();
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, radius * 2);
-  }
-}
-
-function mousePressed() {
-  createCircle(mouseX, mouseY)
-}
-
-function createCircle(x, y) {
-  const newCircle = { x: x, y: y }
-  circles.push(newCircle)
-}
-
-function updateCircle(c) {
-  c.x = c.x + 5;
-}
-
-function isOffScreen(c) {
-  return c.x > width;
-}
-
-function updateAllCircles() {
-  for (let i = 0; i < circles.length; i++) {
-    updateCircle(circles[i]);
-  }
-}
-
-function cleanUpAllCircles() {
-  let onScreenCircles = [];
-  for (let i = 0; i < circles.length; i++) {
-    if (!isOffScreen(circles[i])) {
-      onScreenCircles.push(circles[i]);
-    }
-  }
-  circles = onScreenCircles;
-}
-`,"../sketches/sketch-7.js":`// Circles launched from mouse presses, each keeping the slider radius from its launch
-let circles = [];
-let radiusSlider;
-
-function setup() {
-  createCanvas(640, 360);
-  radiusSlider = createSlider(7, 133, 33);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circles
-  updateAllCircles();
-  // clear circles
-  cleanUpAllCircles();
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, circles[i].radius * 2);
-  }
-}
-
-function mousePressed() {
-  createCircle(mouseX, mouseY, radiusSlider.value())
-}
-
-function createCircle(x, y, radius) {
-  const newCircle = { x: x, y: y, radius: radius }
-  circles.push(newCircle)
-}
-
-function updateCircle(c) {
-  c.x = c.x + 5;
-}
-
-function isOffScreen(c) {
-  return c.x > width;
-}
-
-function updateAllCircles() {
-  for (let i = 0; i < circles.length; i++) {
-    updateCircle(circles[i]);
-  }
-}
-
-function cleanUpAllCircles() {
-  let onScreenCircles = [];
-  for (let i = 0; i < circles.length; i++) {
-    if (!isOffScreen(circles[i])) {
-      onScreenCircles.push(circles[i]);
-    }
-  }
-  circles = onScreenCircles;
-}
-`,"../sketches/sketch-8.js":`// Circles launched from mouse presses, with speed wobbled by noise
-let circles = [];
-let radiusSlider;
-
-function setup() {
-  createCanvas(640, 360);
-  radiusSlider = createSlider(7, 133, 33);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circles
-  updateAllCircles();
-  // clear circles
-  cleanUpAllCircles();
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, circles[i].radius * 2);
-  }
-}
-
-function mousePressed() {
-  createCircle(mouseX, mouseY, radiusSlider.value())
-}
-
-function createCircle(x, y, radius) {
-  // seed: a random starting point in the noise, so each circle wobbles differently
-  const newCircle = { x: x, y: y, radius: radius, seed: random(1000) }
-  circles.push(newCircle)
-}
-
-function updateCircle(c) {
-  // noise() returns a smooth random value between 0 and 1 that changes slowly with time
-  c.x = c.x + 5 + (noise(c.seed + millis() / 1000) - 0.5) * 10;
-  // + 100 reads a different part of the noise, so y wobbles independently of x
-  c.y = c.y + (noise(c.seed + millis() / 1000 + 100) - 0.5) * 10;
-}
-
-function isOffScreen(c) {
-  return c.x > width;
-}
-
-function updateAllCircles() {
-  for (let i = 0; i < circles.length; i++) {
-    updateCircle(circles[i]);
-  }
-}
-
-function cleanUpAllCircles() {
-  let onScreenCircles = [];
-  for (let i = 0; i < circles.length; i++) {
-    if (!isOffScreen(circles[i])) {
-      onScreenCircles.push(circles[i]);
-    }
-  }
-  circles = onScreenCircles;
-}
-`,"../sketches/sketch-9.js":`// Each launch is a ring of 10 circles orbiting the launch point as it moves
-let circles = [];
-let radiusSlider;
-
-function setup() {
-  createCanvas(640, 360);
-  radiusSlider = createSlider(7, 133, 33);
-}
-
-function draw() {
-  background(20);
-  noFill();
-  stroke(255);
-  // update circles
-  updateAllCircles();
-  // clear circles
-  cleanUpAllCircles();
-  // draw circles
-  for (let i = 0; i < circles.length; i++) {
-    renderOrbitingCircle(circles[i]);
-  }
-}
-
-// draws 10 small circles orbiting the launch point, at distance radius
-function renderOrbitingCircle(c) {
-  const age = (millis() - c.launchTime) / 1000; // seconds since launch
-  for (let i = 0; i < 10; i++) {
-    const angle = age + (i / 10) * TWO_PI; // spread evenly around the ring, turning with age
-    const x = c.x + cos(angle) * c.radius;
-    const y = c.y + sin(angle) * c.radius;
-    circle(x, y, 13);
-  }
-}
-
-function mousePressed() {
-  createCircle(mouseX, mouseY, radiusSlider.value())
-}
-
-function createCircle(x, y, radius) {
-  // seed: a random starting point in the noise, so each circle wobbles differently
-  // launchTime: when it was launched, so the orbit can be a function of age
-  const newCircle = { x: x, y: y, radius: radius, seed: random(1000), launchTime: millis() }
-  circles.push(newCircle)
-}
-
-function updateCircle(c) {
-  // noise() returns a smooth random value between 0 and 1 that changes slowly with time
-  c.x = c.x + 5 + (noise(c.seed + millis() / 1000) - 0.5) * 10;
-  // + 100 reads a different part of the noise, so y wobbles independently of x
-  c.y = c.y + (noise(c.seed + millis() / 1000 + 100) - 0.5) * 10;
-}
-
-function isOffScreen(c) {
-  return c.x > width;
-}
-
-function updateAllCircles() {
-  for (let i = 0; i < circles.length; i++) {
-    updateCircle(circles[i]);
-  }
-}
-
-function cleanUpAllCircles() {
-  let onScreenCircles = [];
-  for (let i = 0; i < circles.length; i++) {
-    if (!isOffScreen(circles[i])) {
-      onScreenCircles.push(circles[i]);
-    }
-  }
-  circles = onScreenCircles;
-}
-`}),o=/^sketch-(\d+)(?:\.vs-(\d+))?\.js$/,s=[],c=new Map;for(let[e,t]of Object.entries(a)){let n=e.split(`/`).pop(),r=n.match(o);if(!r)continue;let i=Number(r[1]),a={file:`sketch-${i}.js`,key:n,number:i,source:t,summary:t.match(/^\s*\/\/\s*(.+)/)?.[1]?.trim()??``};r[2]?c.set(`${i} vs ${r[2]}`,a):s.push(a)}var l=s.sort((e,t)=>e.number-t.number);function u(e,t){return c.get(`${e.number} vs ${t.number}`)??e}var d=`diffs-container`,f=/(?=^diff --git)/gm,p=/(?<=\n)/,m=/^(---|\+\+\+)\s+([^\t\r\n]+)/,h=/^index ([0-9a-f]+)\.\.([0-9a-f]+)(?: (\d+))?$/i,g=`header-prefix`,_=`header-filename-suffix`,v=`header-metadata`,y=`header-custom`,b={dark:`pierre-dark`,light:`pierre-light`},x=`data-theme-css`,S=`data-unsafe-css`,C=`data-diffs-scrollbar-measure`,w=`--diffs-scrollbar-gutter-measured`,T=1e5,ee=Object.freeze({fromStart:0,fromEnd:0}),te={startingLine:0,totalLines:1/0,bufferBefore:0,bufferAfter:0},ne=Object.freeze([]),re={startingLine:0,totalLines:0,bufferBefore:0,bufferAfter:0},E,ie=0,ae=class extends Error{constructor(){super(`Highlighter is disposed`),this.name=`HighlighterDisposedError`}};function oe(){return E}function se(e){return e??E??`shiki-js`}function ce(e){if(E!=null&&E!==e)throw Error(`Cannot load the "${e}" highlighter while "${E}" is in use. Only one highlighter type can be active at a time; dispose every "${E}" instance (disposeHighlighter() disposes the shared one) before switching.`)}function le(e){ce(e),E=e,ie++}function ue(){ie--,ie===0&&(E=void 0)}var de=new Map,fe=new Map,pe=new Map,me=new Set;function he(e=b){let t=[];return typeof e==`string`?t.push(e):(t.push(e.dark),t.push(e.light)),t}function ge(){return typeof WorkerGlobalScope<`u`&&typeof self<`u`&&self instanceof WorkerGlobalScope}function _e(e){let t;return()=>t??=e().then(e=>(t=e,e),e=>{throw t=void 0,e})}function ve(e){return typeof e==`object`&&e&&`default`in e?e.default:e}var ye=class extends Error{constructor(e){super(`Theme "${e}" is already registered`),this.name=`DuplicateThemeError`}},be=class extends Error{constructor(e){super(`No loader registered for theme "${e}"`),this.name=`UnregisteredThemeError`}},xe=class extends Error{constructor(e){super(`Theme "${e}" has not been resolved`),this.name=`UnresolvedThemeError`}};function Se(e={}){let t=new Map,n=new Map,r=new Map,i=0;function a(e,n){if(t.has(e))throw new ye(e);t.set(e,n)}function o(e,n){return!t.has(e)&&(t.set(e,n),!0)}function s(e){return t.has(e)}function c(a){let o=n.get(a);if(o!==void 0)return Promise.resolve(o);let s=r.get(a);if(s!==void 0)return s;let c=t.get(a);if(c===void 0&&e.fallbackLoader===void 0)return Promise.reject(new be(a));let l=i,u=Promise.resolve().then(()=>c===void 0?e.fallbackLoader?.(a):c()).then(async t=>{if(t===void 0)throw new be(a);let o=ve(t),s=e.normalizeTheme===void 0?o:await e.normalizeTheme(o,a);return l===i&&n.set(a,s),r.get(a)===u&&r.delete(a),s}).catch(e=>{throw r.get(a)===u&&r.delete(a),e});return r.set(a,u),u}function l(e){return Promise.all(e.map(e=>c(e)))}function u(e,t){n.set(e,t)}function d(e){for(let[t,n]of e)u(t,n)}function f(e){return n.get(e)}function p(e){let t=[];for(let r of e){let e=n.get(r);if(e===void 0)throw new xe(r);t.push(e)}return t}function m(e){return n.has(e)}function h(e){for(let t of e)if(!n.has(t))return!1;return!0}function g(e){let t=n.get(e);return t===void 0?c(e):t}function _(){i++,n.clear(),r.clear()}return{clearResolvedThemes:_,getResolvedOrResolveTheme:g,getResolvedTheme:f,getResolvedThemes:p,hasRegisteredTheme:s,hasResolvedTheme:m,hasResolvedThemes:h,registerTheme:a,registerThemeIfAbsent:o,resolveTheme:c,resolveThemes:l,seedResolvedTheme:u,seedResolvedThemes:d}}var Ce=`modulepreload`,we=function(e,t){return new URL(e,t).href},Te={},Ee=function(e){return e.pathname.endsWith(`.css`)},De=function(e,t,n){if(t in e)return e[t];let r=n();if(!r){e[t]=void 0;return}let i=r.then(()=>{e[t]=void 0},n=>{throw e[t]=void 0,n});return e[t]=i,i},Oe=function(e,t,n){let r=Promise.resolve();if(t&&t.length>0){let e,i=document.querySelector(`meta[property=csp-nonce]`),a=i?.nonce||i?.getAttribute(`nonce`);function o(e){return Promise.all(e.map(e=>Promise.resolve(e).then(e=>({status:`fulfilled`,value:e}),e=>({status:`rejected`,reason:e}))))}function s(e){return import.meta.resolve?new URL(import.meta.resolve(e)):new URL(e,import.meta.url)}r=o(t.map(t=>{t=we(t,n);let r=s(t),i=Ee(r);return De(Te,r.href,()=>{if(e===void 0){e={all:new Set,styles:new Set};let t=document.getElementsByTagName(`link`);for(let n=t.length-1;n>=0;n--){let r=t[n];e.all.add(r.href),r.rel===`stylesheet`&&e.styles.add(r.href)}}if((i?e.styles:e.all).has(r.href))return;let t=document.createElement(`link`);if(t.rel=i?`stylesheet`:Ce,i||(t.as=`script`),t.crossOrigin=``,t.href=r.href,a&&t.setAttribute(`nonce`,a),document.head.appendChild(t),i)return new Promise((e,n)=>{t.addEventListener(`load`,e),t.addEventListener(`error`,()=>n(Error(`Unable to preload CSS for ${r}`)))})})}).filter(e=>e!==void 0))}function i(e){let t=new Event(`vite:preloadError`,{cancelable:!0});if(t.payload=e,window.dispatchEvent(t),!t.defaultPrevented)throw e}return r.then(t=>{for(let e of t||[])e.status===`rejected`&&i(e.reason);return e().catch(i)})},ke=new Map,Ae=new Map,je=_e(()=>Oe(()=>import(`./loader-C1D2gLQZ.js`),[],import.meta.url)),Me=_e(()=>Oe(()=>import(`./themes-Dj3_vhTF.js`),[],import.meta.url)),Ne=_e(()=>Oe(()=>import(`./core-PQVtDlm_.js`),[],import.meta.url)),Pe=[[`editor.lineHighlightBackground`,`editor.active_line.background`],[`editor.selectionBackground`,`element.selected`],[`editor.findMatchBackground`,`search.match_background`],[`editor.findMatchHighlightBackground`,`search.match_background`],[`editorBracketMatch.background`,`editor.document_highlight.bracket_background`],[`editorError.foreground`,`error`],[`editorWarning.foreground`,`warning`],[`editorInfo.foreground`,`info`],[`editorHint.foreground`,`hint`],[`gitDecoration.addedResourceForeground`,`created`,`terminal.ansi.green`],[`gitDecoration.deletedResourceForeground`,`deleted`,`terminal.ansi.red`],[`gitDecoration.modifiedResourceForeground`,`modified`,`terminal.ansi.blue`]];function Fe(e,t){let n=`themes`in t?t.themes[0]:t;if(n==null)throw Error(`Theme "${e}" is an empty Zed theme family.`);let r={...n,name:e},i={};for(let[e,t]of Object.entries(r.style))typeof t==`string`&&(i[e]=t);let a=r.style.players?.[0];a?.cursor!=null&&(i[`editorCursor.foreground`]??=a.cursor),a?.selection!=null&&(i[`editor.selectionBackground`]??=a.selection);for(let[e,...t]of Pe){if(i[e]!=null)continue;let n=t.find(e=>i[e]!=null);n!=null&&(i[e]=i[n])}if(r.cssVariables===!0)i[`editor.foreground`]=`var(--hls-foreground)`,i[`editor.background`]=`var(--hls-background)`;else if(typeof r.cssVariables==`object`){i[`editor.foreground`]??=i.text??i.foreground??`foreground`,i[`editor.background`]??=i.background??`background`;let{prefix:e=`--hls-`,defaults:t}=r.cssVariables;for(let[n,r]of Object.entries(i)){let a=t?.[r];i[n]=`var(${e}${r}${a?`, ${a}`:``})`}}let o=r.appearance===`light`?`light`:`dark`;return{name:e,type:o,colors:i,zed:r,fg:i[`editor.foreground`]??i.text??i.foreground??(o===`light`?`#333333`:`#bbbbbb`),bg:i[`editor.background`]??i.background??(o===`light`?`#ffffff`:`#1e1e1e`)}}function Ie(e){let t=Ae.get(e);return t??(t=Se({fallbackLoader:async t=>{if(typeof __DIFFS_WORKER__<`u`?__DIFFS_WORKER__:ge())throw Error(`Theme "${t}" cannot be resolved from a worker context. Themes must be pre-resolved on the main thread and passed to the worker via the resolvedThemes parameter.`);let n=ke.get(t);if(e===`highlights`){let e=n?.zed??n?.diffs;if(e!=null){let n=await e(),r=`default`in n?n.default:n;if(`zed`in r&&r.zed!=null)return r;if(`style`in r||`themes`in r)return Fe(t,r);throw Error(`Theme "${t}" is a TextMate theme; register a Zed theme with registerCustomTheme(name, loader, 'zed') for Highlights.`)}let r=je(),{themes:i}=r instanceof Promise?await r:r,a=i[t];if(a!=null)return Fe(t,(await a()).default);if(n?.textmate!=null)throw Error(`Theme "${t}" is only registered for TextMate; use registerCustomTheme(name, loader, 'zed') for Highlights.`)}else{let e=n?.textmate??n?.diffs,r;if(e!=null){let t=await e();r=`default`in t?t.default:t}else{let e=Me(),{themes:i}=e instanceof Promise?await e:e,a=i.getTheme(t);if(a==null&&n?.zed!=null)throw Error(`Theme "${t}" is only registered for Zed; use registerCustomTheme(name, loader, 'textmate') for Shiki.`);if(a==null)throw Error(`No valid theme loader registered for "${t}"`);let o=await a.load();r=`default`in o?o.default:o}if(`style`in r||`themes`in r)throw Error(`Theme "${t}" is a Zed theme; use preferredHighlighter: 'highlights' or register a TextMate theme for Shiki.`);let i=Ne(),{normalizeTheme:a,createCssVariablesTheme:o}=i instanceof Promise?await i:i;if(`cssVariables`in r&&r.cssVariables!=null)return{...r,textmate:a(o(r.cssVariables))};if(`textmate`in r&&r.textmate!=null)return{...r,textmate:a(r.textmate)};let s=a(r);return{name:s.name,type:s.type,fg:s.fg,bg:s.bg,colors:s.colors,textmate:s}}throw Error(`No valid theme loader registered for "${t}"`)},normalizeTheme:(e,t)=>{if(e.name!==t)throw Error(`resolvedTheme: themeName: ${t} does not match theme.name: ${e.name}`);return e}}),Ae.set(e,t)),t}function Le(e,t=se()){return typeof t!=`string`&&t.isDisposed?!1:(typeof t==`string`?Ie(t):t.themeResolver).hasResolvedThemes(he(e))}var Re;async function ze(e){let t=se(e);le(t);try{if(t===`highlights`){let{HighlightsHighlighter:e}=await Oe(async()=>{let{HighlightsHighlighter:e}=await import(`./highlights-BMyo_AgY.js`);return{HighlightsHighlighter:e}},__vite__mapDeps([0,1]),import.meta.url);return new e}let{ShikiHighlighter:e}=await Oe(async()=>{let{ShikiHighlighter:e}=await import(`./shiki-DmwTAdoJ.js`);return{ShikiHighlighter:e}},__vite__mapDeps([2,1,3]),import.meta.url);return await e.create(t)}finally{ue()}}async function Be({themes:e,langs:t,preferredHighlighter:n}){Ve();let r=Re??=ze(oe()??n),i;try{i=await r}catch(e){throw Re===r&&(Re=void 0),e}if(Re===r&&(Re=i),await Promise.all([i.themeResolver.resolveThemes(e),i.loadLanguages(t)]),i.isDisposed)throw new ae;return i}function Ve(){Re!=null&&!(`then`in Re)&&Re.isDisposed&&(Re=void 0)}function He({theme:e,lang:t,langs:n}={}){Ve();let r=Re;if(!(r==null||`then`in r||e!=null&&!Le(e,r)||(t!=null||n!=null)&&!r.hasLoadedLanguages([...t==null?[]:[t],...n??[]])))return r}var Ue=new Set,We=null;function Ge(e){Ue.add(e),We??=requestAnimationFrame(qe)}function Ke(e){Ue.delete(e)&&Ue.size===0&&We!=null&&(cancelAnimationFrame(We),We=null)}function qe(e){let t=new Set(Ue);Ue.clear();for(let n of t)try{n(e)}catch(e){console.error(e)}We=Ue.size>0?requestAnimationFrame(qe):null}function Je(e,t){return e==null||t==null||typeof e==`string`||typeof t==`string`?e===t:e.dark===t.dark&&e.light===t.light}function Ye(e,t){return e?.start===t?.start&&e?.end===t?.end&&e?.side===t?.side&&e?.endSide===t?.endSide}function Xe(e){return{type:`text`,value:e}}function D({tagName:e,children:t=[],properties:n={}}){return{type:`element`,tagName:e,properties:n,children:t}}function Ze({name:e,width:t=16,height:n=16,properties:r}){return D({tagName:`svg`,properties:{width:t,height:n,viewBox:`0 0 16 16`,...r},children:[D({tagName:`use`,properties:{href:`#${e.replace(/^#/,``)}`}})]})}function Qe(e){return D({tagName:`div`,properties:{"data-gutter":``},children:e})}function $e(e,t,n,r={}){return D({tagName:`div`,properties:{"data-line-type":e,"data-column-number":t,"data-line-index":n,...r},children:t==null?void 0:[D({tagName:`span`,properties:{"data-line-number-content":``},children:[Xe(`${t}`)]})]})}function O(e,t,n){return D({tagName:`div`,properties:{"data-gutter-buffer":t,"data-buffer-size":n,"data-line-type":t===`annotation`?void 0:e,style:t===`annotation`?`grid-row: span ${n};`:`grid-row: span ${n};min-height:calc(${n} * 1lh);`}})}function et(){return D({tagName:`button`,properties:{"data-utility-button":``,type:`button`},children:[Ze({name:`diffs-icon-plus`,properties:{"data-icon":``}})]})}var tt=[`area`,`base`,`basefont`,`bgsound`,`br`,`col`,`command`,`embed`,`frame`,`hr`,`image`,`img`,`input`,`keygen`,`link`,`meta`,`param`,`source`,`track`,`wbr`],nt=class{constructor(e,t,n){this.normal=t,this.property=e,n&&(this.space=n)}};nt.prototype.normal={},nt.prototype.property={},nt.prototype.space=void 0;function rt(e,t){let n={},r={};for(let t of e)Object.assign(n,t.property),Object.assign(r,t.normal);return new nt(n,r,t)}function it(e){return e.toLowerCase()}var k=class{constructor(e,t){this.attribute=t,this.property=e}};k.prototype.attribute=``,k.prototype.booleanish=!1,k.prototype.boolean=!1,k.prototype.commaOrSpaceSeparated=!1,k.prototype.commaSeparated=!1,k.prototype.defined=!1,k.prototype.mustUseProperty=!1,k.prototype.number=!1,k.prototype.overloadedBoolean=!1,k.prototype.property=``,k.prototype.spaceSeparated=!1,k.prototype.space=void 0;var at=e({boolean:()=>A,booleanish:()=>j,commaOrSpaceSeparated:()=>P,commaSeparated:()=>ct,number:()=>M,overloadedBoolean:()=>st,spaceSeparated:()=>N}),ot=0,A=lt(),j=lt(),st=lt(),M=lt(),N=lt(),ct=lt(),P=lt();function lt(){return 2**++ot}var ut=Object.keys(at),dt=class extends k{constructor(e,t,n,r){let i=-1;if(super(e,t),ft(this,`space`,r),typeof n==`number`)for(;++i<ut.length;){let e=ut[i];ft(this,ut[i],(n&at[e])===at[e])}}};dt.prototype.defined=!0;function ft(e,t,n){n&&(e[t]=n)}function pt(e){let t={},n={};for(let[r,i]of Object.entries(e.properties)){let a=new dt(r,e.transform(e.attributes||{},r),i,e.space);e.mustUseProperty&&e.mustUseProperty.includes(r)&&(a.mustUseProperty=!0),t[r]=a,n[it(r)]=r,n[it(a.attribute)]=r}return new nt(t,n,e.space)}var mt=pt({properties:{ariaActiveDescendant:null,ariaAtomic:j,ariaAutoComplete:null,ariaBusy:j,ariaChecked:j,ariaColCount:M,ariaColIndex:M,ariaColSpan:M,ariaControls:N,ariaCurrent:null,ariaDescribedBy:N,ariaDetails:null,ariaDisabled:j,ariaDropEffect:N,ariaErrorMessage:null,ariaExpanded:j,ariaFlowTo:N,ariaGrabbed:j,ariaHasPopup:null,ariaHidden:j,ariaInvalid:null,ariaKeyShortcuts:null,ariaLabel:null,ariaLabelledBy:N,ariaLevel:M,ariaLive:null,ariaModal:j,ariaMultiLine:j,ariaMultiSelectable:j,ariaOrientation:null,ariaOwns:N,ariaPlaceholder:null,ariaPosInSet:M,ariaPressed:j,ariaReadOnly:j,ariaRelevant:null,ariaRequired:j,ariaRoleDescription:N,ariaRowCount:M,ariaRowIndex:M,ariaRowSpan:M,ariaSelected:j,ariaSetSize:M,ariaSort:null,ariaValueMax:M,ariaValueMin:M,ariaValueNow:M,ariaValueText:null,role:null},transform(e,t){return t===`role`?t:`aria-`+t.slice(4).toLowerCase()}});function ht(e,t){return t in e?e[t]:t}function gt(e,t){return ht(e,t.toLowerCase())}var _t=pt({attributes:{acceptcharset:`accept-charset`,classname:`class`,htmlfor:`for`,httpequiv:`http-equiv`},mustUseProperty:[`checked`,`multiple`,`muted`,`selected`],properties:{abbr:null,accept:ct,acceptCharset:N,accessKey:N,action:null,allow:null,allowFullScreen:A,allowPaymentRequest:A,allowUserMedia:A,alpha:A,alt:null,as:null,async:A,autoCapitalize:null,autoComplete:N,autoFocus:A,autoPlay:A,blocking:N,capture:null,charSet:null,checked:A,cite:null,className:N,closedBy:null,colorSpace:null,cols:M,colSpan:M,command:null,commandFor:null,content:null,contentEditable:j,controls:A,controlsList:N,coords:M|ct,crossOrigin:null,data:null,dateTime:null,decoding:null,default:A,defer:A,dir:null,dirName:null,disabled:A,download:st,draggable:j,encType:null,enterKeyHint:null,fetchPriority:null,form:null,formAction:null,formEncType:null,formMethod:null,formNoValidate:A,formTarget:null,headers:N,height:M,hidden:st,high:M,href:null,hrefLang:null,htmlFor:N,httpEquiv:N,id:null,imageSizes:null,imageSrcSet:null,inert:A,inputMode:null,integrity:null,is:null,isMap:A,itemId:null,itemProp:N,itemRef:N,itemScope:A,itemType:N,kind:null,label:null,lang:null,language:null,list:null,loading:null,loop:A,low:M,manifest:null,max:null,maxLength:M,media:null,method:null,min:null,minLength:M,multiple:A,muted:A,name:null,nonce:null,noModule:A,noValidate:A,onAbort:null,onAfterPrint:null,onAuxClick:null,onBeforeMatch:null,onBeforePrint:null,onBeforeToggle:null,onBeforeUnload:null,onBlur:null,onCancel:null,onCanPlay:null,onCanPlayThrough:null,onChange:null,onClick:null,onClose:null,onContextLost:null,onContextMenu:null,onContextRestored:null,onCopy:null,onCueChange:null,onCut:null,onDblClick:null,onDrag:null,onDragEnd:null,onDragEnter:null,onDragExit:null,onDragLeave:null,onDragOver:null,onDragStart:null,onDrop:null,onDurationChange:null,onEmptied:null,onEnded:null,onError:null,onFocus:null,onFormData:null,onHashChange:null,onInput:null,onInvalid:null,onKeyDown:null,onKeyPress:null,onKeyUp:null,onLanguageChange:null,onLoad:null,onLoadedData:null,onLoadedMetadata:null,onLoadEnd:null,onLoadStart:null,onMessage:null,onMessageError:null,onMouseDown:null,onMouseEnter:null,onMouseLeave:null,onMouseMove:null,onMouseOut:null,onMouseOver:null,onMouseUp:null,onOffline:null,onOnline:null,onPageHide:null,onPageShow:null,onPaste:null,onPause:null,onPlay:null,onPlaying:null,onPopState:null,onProgress:null,onRateChange:null,onRejectionHandled:null,onReset:null,onResize:null,onScroll:null,onScrollEnd:null,onSecurityPolicyViolation:null,onSeeked:null,onSeeking:null,onSelect:null,onSlotChange:null,onStalled:null,onStorage:null,onSubmit:null,onSuspend:null,onTimeUpdate:null,onToggle:null,onUnhandledRejection:null,onUnload:null,onVolumeChange:null,onWaiting:null,onWheel:null,open:A,optimum:M,pattern:null,ping:N,placeholder:null,playsInline:A,popover:null,popoverTarget:null,popoverTargetAction:null,poster:null,preload:null,readOnly:A,referrerPolicy:null,rel:N,required:A,reversed:A,rows:M,rowSpan:M,sandbox:N,scope:null,scoped:A,seamless:A,selected:A,shadowRootClonable:A,shadowRootCustomElementRegistry:A,shadowRootDelegatesFocus:A,shadowRootMode:null,shadowRootSerializable:A,shape:null,size:M,sizes:null,slot:null,span:M,spellCheck:j,src:null,srcDoc:null,srcLang:null,srcSet:null,start:M,step:null,style:null,tabIndex:M,target:null,title:null,translate:null,type:null,typeMustMatch:A,useMap:null,value:j,width:M,wrap:null,writingSuggestions:null,align:null,aLink:null,archive:N,axis:null,background:null,bgColor:null,border:M,borderColor:null,bottomMargin:M,cellPadding:null,cellSpacing:null,char:null,charOff:null,classId:null,clear:null,code:null,codeBase:null,codeType:null,color:null,compact:A,declare:A,event:null,face:null,frame:null,frameBorder:null,hSpace:M,leftMargin:M,link:null,longDesc:null,lowSrc:null,marginHeight:M,marginWidth:M,noResize:A,noHref:A,noShade:A,noWrap:A,object:null,profile:null,prompt:null,rev:null,rightMargin:M,rules:null,scheme:null,scrolling:j,standby:null,summary:null,text:null,topMargin:M,valueType:null,version:null,vAlign:null,vLink:null,vSpace:M,allowTransparency:null,autoCorrect:null,autoSave:null,credentialless:A,disablePictureInPicture:A,disableRemotePlayback:A,exportParts:ct,part:N,prefix:null,property:null,results:M,security:null,unselectable:null},space:`html`,transform:gt}),vt=pt({attributes:{accentHeight:`accent-height`,alignmentBaseline:`alignment-baseline`,arabicForm:`arabic-form`,baselineShift:`baseline-shift`,capHeight:`cap-height`,className:`class`,clipPath:`clip-path`,clipRule:`clip-rule`,colorInterpolation:`color-interpolation`,colorInterpolationFilters:`color-interpolation-filters`,colorProfile:`color-profile`,colorRendering:`color-rendering`,crossOrigin:`crossorigin`,dataType:`datatype`,dominantBaseline:`dominant-baseline`,enableBackground:`enable-background`,fillOpacity:`fill-opacity`,fillRule:`fill-rule`,floodColor:`flood-color`,floodOpacity:`flood-opacity`,fontFamily:`font-family`,fontSize:`font-size`,fontSizeAdjust:`font-size-adjust`,fontStretch:`font-stretch`,fontStyle:`font-style`,fontVariant:`font-variant`,fontWeight:`font-weight`,glyphName:`glyph-name`,glyphOrientationHorizontal:`glyph-orientation-horizontal`,glyphOrientationVertical:`glyph-orientation-vertical`,hrefLang:`hreflang`,horizAdvX:`horiz-adv-x`,horizOriginX:`horiz-origin-x`,horizOriginY:`horiz-origin-y`,imageRendering:`image-rendering`,letterSpacing:`letter-spacing`,lightingColor:`lighting-color`,markerEnd:`marker-end`,markerMid:`marker-mid`,markerStart:`marker-start`,maskType:`mask-type`,navDown:`nav-down`,navDownLeft:`nav-down-left`,navDownRight:`nav-down-right`,navLeft:`nav-left`,navNext:`nav-next`,navPrev:`nav-prev`,navRight:`nav-right`,navUp:`nav-up`,navUpLeft:`nav-up-left`,navUpRight:`nav-up-right`,onAbort:`onabort`,onActivate:`onactivate`,onAfterPrint:`onafterprint`,onBeforePrint:`onbeforeprint`,onBegin:`onbegin`,onCancel:`oncancel`,onCanPlay:`oncanplay`,onCanPlayThrough:`oncanplaythrough`,onChange:`onchange`,onClick:`onclick`,onClose:`onclose`,onCopy:`oncopy`,onCueChange:`oncuechange`,onCut:`oncut`,onDblClick:`ondblclick`,onDrag:`ondrag`,onDragEnd:`ondragend`,onDragEnter:`ondragenter`,onDragExit:`ondragexit`,onDragLeave:`ondragleave`,onDragOver:`ondragover`,onDragStart:`ondragstart`,onDrop:`ondrop`,onDurationChange:`ondurationchange`,onEmptied:`onemptied`,onEnd:`onend`,onEnded:`onended`,onError:`onerror`,onFocus:`onfocus`,onFocusIn:`onfocusin`,onFocusOut:`onfocusout`,onHashChange:`onhashchange`,onInput:`oninput`,onInvalid:`oninvalid`,onKeyDown:`onkeydown`,onKeyPress:`onkeypress`,onKeyUp:`onkeyup`,onLoad:`onload`,onLoadedData:`onloadeddata`,onLoadedMetadata:`onloadedmetadata`,onLoadStart:`onloadstart`,onMessage:`onmessage`,onMouseDown:`onmousedown`,onMouseEnter:`onmouseenter`,onMouseLeave:`onmouseleave`,onMouseMove:`onmousemove`,onMouseOut:`onmouseout`,onMouseOver:`onmouseover`,onMouseUp:`onmouseup`,onMouseWheel:`onmousewheel`,onOffline:`onoffline`,onOnline:`ononline`,onPageHide:`onpagehide`,onPageShow:`onpageshow`,onPaste:`onpaste`,onPause:`onpause`,onPlay:`onplay`,onPlaying:`onplaying`,onPopState:`onpopstate`,onProgress:`onprogress`,onRateChange:`onratechange`,onRepeat:`onrepeat`,onReset:`onreset`,onResize:`onresize`,onScroll:`onscroll`,onSeeked:`onseeked`,onSeeking:`onseeking`,onSelect:`onselect`,onShow:`onshow`,onStalled:`onstalled`,onStorage:`onstorage`,onSubmit:`onsubmit`,onSuspend:`onsuspend`,onTimeUpdate:`ontimeupdate`,onToggle:`ontoggle`,onUnload:`onunload`,onVolumeChange:`onvolumechange`,onWaiting:`onwaiting`,onZoom:`onzoom`,overlinePosition:`overline-position`,overlineThickness:`overline-thickness`,paintOrder:`paint-order`,panose1:`panose-1`,pointerEvents:`pointer-events`,referrerPolicy:`referrerpolicy`,renderingIntent:`rendering-intent`,shapeRendering:`shape-rendering`,stopColor:`stop-color`,stopOpacity:`stop-opacity`,strikethroughPosition:`strikethrough-position`,strikethroughThickness:`strikethrough-thickness`,strokeDashArray:`stroke-dasharray`,strokeDashOffset:`stroke-dashoffset`,strokeLineCap:`stroke-linecap`,strokeLineJoin:`stroke-linejoin`,strokeMiterLimit:`stroke-miterlimit`,strokeOpacity:`stroke-opacity`,strokeWidth:`stroke-width`,tabIndex:`tabindex`,textAnchor:`text-anchor`,textDecoration:`text-decoration`,textRendering:`text-rendering`,transformOrigin:`transform-origin`,typeOf:`typeof`,underlinePosition:`underline-position`,underlineThickness:`underline-thickness`,unicodeBidi:`unicode-bidi`,unicodeRange:`unicode-range`,unitsPerEm:`units-per-em`,vAlphabetic:`v-alphabetic`,vHanging:`v-hanging`,vIdeographic:`v-ideographic`,vMathematical:`v-mathematical`,vectorEffect:`vector-effect`,vertAdvY:`vert-adv-y`,vertOriginX:`vert-origin-x`,vertOriginY:`vert-origin-y`,wordSpacing:`word-spacing`,writingMode:`writing-mode`,xHeight:`x-height`,playbackOrder:`playbackorder`,timelineBegin:`timelinebegin`},properties:{about:P,accentHeight:M,accumulate:null,additive:null,alignmentBaseline:null,alphabetic:M,amplitude:M,arabicForm:null,ascent:M,attributeName:null,attributeType:null,azimuth:M,bandwidth:null,baselineShift:null,baseFrequency:null,baseProfile:null,bbox:null,begin:null,bias:M,by:null,calcMode:null,capHeight:M,className:N,clip:null,clipPath:null,clipPathUnits:null,clipRule:null,color:null,colorInterpolation:null,colorInterpolationFilters:null,colorProfile:null,colorRendering:null,content:null,contentScriptType:null,contentStyleType:null,crossOrigin:null,cursor:null,cx:null,cy:null,d:null,dataType:null,defaultAction:null,descent:M,diffuseConstant:M,direction:null,display:null,dur:null,divisor:M,dominantBaseline:null,download:A,dx:null,dy:null,edgeMode:null,editable:null,elevation:M,enableBackground:null,end:null,event:null,exponent:M,externalResourcesRequired:null,fill:null,fillOpacity:M,fillRule:null,filter:null,filterRes:null,filterUnits:null,floodColor:null,floodOpacity:null,focusable:null,focusHighlight:null,fontFamily:null,fontSize:null,fontSizeAdjust:null,fontStretch:null,fontStyle:null,fontVariant:null,fontWeight:null,format:null,fr:null,from:null,fx:null,fy:null,g1:ct,g2:ct,glyphName:ct,glyphOrientationHorizontal:null,glyphOrientationVertical:null,glyphRef:null,gradientTransform:null,gradientUnits:null,handler:null,hanging:M,hatchContentUnits:null,hatchUnits:null,height:null,href:null,hrefLang:null,horizAdvX:M,horizOriginX:M,horizOriginY:M,id:null,ideographic:M,imageRendering:null,initialVisibility:null,in:null,in2:null,intercept:M,k:M,k1:M,k2:M,k3:M,k4:M,kernelMatrix:P,kernelUnitLength:null,keyPoints:null,keySplines:null,keyTimes:null,kerning:null,lang:null,lengthAdjust:null,letterSpacing:null,lightingColor:null,limitingConeAngle:M,local:null,markerEnd:null,markerMid:null,markerStart:null,markerHeight:null,markerUnits:null,markerWidth:null,mask:null,maskContentUnits:null,maskType:null,maskUnits:null,mathematical:null,max:null,media:null,mediaCharacterEncoding:null,mediaContentEncodings:null,mediaSize:M,mediaTime:null,method:null,min:null,mode:null,name:null,navDown:null,navDownLeft:null,navDownRight:null,navLeft:null,navNext:null,navPrev:null,navRight:null,navUp:null,navUpLeft:null,navUpRight:null,numOctaves:null,observer:null,offset:null,onAbort:null,onActivate:null,onAfterPrint:null,onBeforePrint:null,onBegin:null,onCancel:null,onCanPlay:null,onCanPlayThrough:null,onChange:null,onClick:null,onClose:null,onCopy:null,onCueChange:null,onCut:null,onDblClick:null,onDrag:null,onDragEnd:null,onDragEnter:null,onDragExit:null,onDragLeave:null,onDragOver:null,onDragStart:null,onDrop:null,onDurationChange:null,onEmptied:null,onEnd:null,onEnded:null,onError:null,onFocus:null,onFocusIn:null,onFocusOut:null,onHashChange:null,onInput:null,onInvalid:null,onKeyDown:null,onKeyPress:null,onKeyUp:null,onLoad:null,onLoadedData:null,onLoadedMetadata:null,onLoadStart:null,onMessage:null,onMouseDown:null,onMouseEnter:null,onMouseLeave:null,onMouseMove:null,onMouseOut:null,onMouseOver:null,onMouseUp:null,onMouseWheel:null,onOffline:null,onOnline:null,onPageHide:null,onPageShow:null,onPaste:null,onPause:null,onPlay:null,onPlaying:null,onPopState:null,onProgress:null,onRateChange:null,onRepeat:null,onReset:null,onResize:null,onScroll:null,onSeeked:null,onSeeking:null,onSelect:null,onShow:null,onStalled:null,onStorage:null,onSubmit:null,onSuspend:null,onTimeUpdate:null,onToggle:null,onUnload:null,onVolumeChange:null,onWaiting:null,onZoom:null,opacity:null,operator:null,order:null,orient:null,orientation:null,origin:null,overflow:null,overlay:null,overlinePosition:M,overlineThickness:M,paintOrder:null,panose1:null,path:null,pathLength:M,patternContentUnits:null,patternTransform:null,patternUnits:null,phase:null,ping:N,pitch:null,playbackOrder:null,pointerEvents:null,points:null,pointsAtX:M,pointsAtY:M,pointsAtZ:M,preserveAlpha:null,preserveAspectRatio:null,primitiveUnits:null,propagate:null,property:P,r:null,radius:null,referrerPolicy:null,refX:null,refY:null,rel:P,rev:P,renderingIntent:null,repeatCount:null,repeatDur:null,requiredExtensions:P,requiredFeatures:P,requiredFonts:P,requiredFormats:P,resource:null,restart:null,result:null,rotate:null,rx:null,ry:null,scale:null,seed:null,shapeRendering:null,side:null,slope:null,snapshotTime:null,specularConstant:M,specularExponent:M,spreadMethod:null,spacing:null,startOffset:null,stdDeviation:null,stemh:null,stemv:null,stitchTiles:null,stopColor:null,stopOpacity:null,strikethroughPosition:M,strikethroughThickness:M,string:null,stroke:null,strokeDashArray:P,strokeDashOffset:null,strokeLineCap:null,strokeLineJoin:null,strokeMiterLimit:M,strokeOpacity:M,strokeWidth:null,style:null,surfaceScale:M,syncBehavior:null,syncBehaviorDefault:null,syncMaster:null,syncTolerance:null,syncToleranceDefault:null,systemLanguage:P,tabIndex:M,tableValues:null,target:null,targetX:M,targetY:M,textAnchor:null,textDecoration:null,textRendering:null,textLength:null,timelineBegin:null,title:null,transformBehavior:null,type:null,typeOf:P,to:null,transform:null,transformOrigin:null,u1:null,u2:null,underlinePosition:M,underlineThickness:M,unicode:null,unicodeBidi:null,unicodeRange:null,unitsPerEm:M,values:null,vAlphabetic:M,vMathematical:M,vectorEffect:null,vHanging:M,vIdeographic:M,version:null,vertAdvY:M,vertOriginX:M,vertOriginY:M,viewBox:null,viewTarget:null,visibility:null,width:null,widths:null,wordSpacing:null,writingMode:null,x:null,x1:null,x2:null,xChannelSelector:null,xHeight:M,y:null,y1:null,y2:null,yChannelSelector:null,z:null,zoomAndPan:null},space:`svg`,transform:ht}),yt=pt({properties:{xLinkActuate:null,xLinkArcRole:null,xLinkHref:null,xLinkRole:null,xLinkShow:null,xLinkTitle:null,xLinkType:null},space:`xlink`,transform(e,t){return`xlink:`+t.slice(5).toLowerCase()}}),bt=pt({attributes:{xmlnsxlink:`xmlns:xlink`},properties:{xmlnsXLink:null,xmlns:null},space:`xmlns`,transform:gt}),xt=pt({properties:{xmlBase:null,xmlLang:null,xmlSpace:null},space:`xml`,transform(e,t){return`xml:`+t.slice(3).toLowerCase()}}),St=/[A-Z]/g,Ct=/-[a-z]/g,wt=/^data[-\w.:]+$/i;function Tt(e,t){let n=it(t),r=t,i=k;if(n in e.normal)return e.property[e.normal[n]];if(n.length>4&&n.slice(0,4)===`data`&&wt.test(t)){if(t.charAt(4)===`-`){let e=t.slice(5).replace(Ct,Dt);r=`data`+e.charAt(0).toUpperCase()+e.slice(1)}else{let e=t.slice(4);if(!Ct.test(e)){let n=e.replace(St,Et);n.charAt(0)!==`-`&&(n=`-`+n),t=`data`+n}}i=dt}return new i(r,t)}function Et(e){return`-`+e.toLowerCase()}function Dt(e){return e.charAt(1).toUpperCase()}var Ot=rt([mt,_t,yt,bt,xt],`html`),kt=rt([mt,vt,yt,bt,xt],`svg`),At={}.hasOwnProperty;function jt(e,t){let n=t||{};function r(t,...n){let i=r.invalid,a=r.handlers;if(t&&At.call(t,e)){let n=String(t[e]);i=At.call(a,n)?a[n]:r.unknown}if(i)return i.call(this,t,...n)}return r.handlers=n.handlers||{},r.invalid=n.invalid,r.unknown=n.unknown,r}var Mt=/["&'<>`]/g,Nt=/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,Pt=/[\x01-\t\v\f\x0E-\x1F\x7F\x81\x8D\x8F\x90\x9D\xA0-\uFFFF]/g,Ft=/[|\\{}()[\]^$+*?.]/g,It=new WeakMap;function Lt(e,t){return e=e.replace(t.subset?Rt(t.subset):Mt,r),t.subset||t.escapeOnly?e:e.replace(Nt,n).replace(Pt,r);function n(e,n,r){return t.format((e.charCodeAt(0)-55296)*1024+e.charCodeAt(1)-56320+65536,r.charCodeAt(n+2),t)}function r(e,n,r){return t.format(e.charCodeAt(0),r.charCodeAt(n+1),t)}}function Rt(e){let t=It.get(e);return t||(t=zt(e),It.set(e,t)),t}function zt(e){let t=[],n=-1;for(;++n<e.length;)t.push(e[n].replace(Ft,`\\$&`));return RegExp(`(?:`+t.join(`|`)+`)`,`g`)}var Bt=/[\dA-Fa-f]/;function Vt(e,t,n){let r=`&#x`+e.toString(16).toUpperCase();return n&&t&&!Bt.test(String.fromCharCode(t))?r:r+`;`}var Ht=/\d/;function Ut(e,t,n){let r=`&#`+String(e);return n&&t&&!Ht.test(String.fromCharCode(t))?r:r+`;`}var Wt=`AElig.AMP.Aacute.Acirc.Agrave.Aring.Atilde.Auml.COPY.Ccedil.ETH.Eacute.Ecirc.Egrave.Euml.GT.Iacute.Icirc.Igrave.Iuml.LT.Ntilde.Oacute.Ocirc.Ograve.Oslash.Otilde.Ouml.QUOT.REG.THORN.Uacute.Ucirc.Ugrave.Uuml.Yacute.aacute.acirc.acute.aelig.agrave.amp.aring.atilde.auml.brvbar.ccedil.cedil.cent.copy.curren.deg.divide.eacute.ecirc.egrave.eth.euml.frac12.frac14.frac34.gt.iacute.icirc.iexcl.igrave.iquest.iuml.laquo.lt.macr.micro.middot.nbsp.not.ntilde.oacute.ocirc.ograve.ordf.ordm.oslash.otilde.ouml.para.plusmn.pound.quot.raquo.reg.sect.shy.sup1.sup2.sup3.szlig.thorn.times.uacute.ucirc.ugrave.uml.uuml.yacute.yen.yuml`.split(`.`),Gt={nbsp:`\xA0`,iexcl:`¡`,cent:`¢`,pound:`£`,curren:`¤`,yen:`¥`,brvbar:`¦`,sect:`§`,uml:`¨`,copy:`©`,ordf:`ª`,laquo:`«`,not:`¬`,shy:`­`,reg:`®`,macr:`¯`,deg:`°`,plusmn:`±`,sup2:`²`,sup3:`³`,acute:`´`,micro:`µ`,para:`¶`,middot:`·`,cedil:`¸`,sup1:`¹`,ordm:`º`,raquo:`»`,frac14:`¼`,frac12:`½`,frac34:`¾`,iquest:`¿`,Agrave:`À`,Aacute:`Á`,Acirc:`Â`,Atilde:`Ã`,Auml:`Ä`,Aring:`Å`,AElig:`Æ`,Ccedil:`Ç`,Egrave:`È`,Eacute:`É`,Ecirc:`Ê`,Euml:`Ë`,Igrave:`Ì`,Iacute:`Í`,Icirc:`Î`,Iuml:`Ï`,ETH:`Ð`,Ntilde:`Ñ`,Ograve:`Ò`,Oacute:`Ó`,Ocirc:`Ô`,Otilde:`Õ`,Ouml:`Ö`,times:`×`,Oslash:`Ø`,Ugrave:`Ù`,Uacute:`Ú`,Ucirc:`Û`,Uuml:`Ü`,Yacute:`Ý`,THORN:`Þ`,szlig:`ß`,agrave:`à`,aacute:`á`,acirc:`â`,atilde:`ã`,auml:`ä`,aring:`å`,aelig:`æ`,ccedil:`ç`,egrave:`è`,eacute:`é`,ecirc:`ê`,euml:`ë`,igrave:`ì`,iacute:`í`,icirc:`î`,iuml:`ï`,eth:`ð`,ntilde:`ñ`,ograve:`ò`,oacute:`ó`,ocirc:`ô`,otilde:`õ`,ouml:`ö`,divide:`÷`,oslash:`ø`,ugrave:`ù`,uacute:`ú`,ucirc:`û`,uuml:`ü`,yacute:`ý`,thorn:`þ`,yuml:`ÿ`,fnof:`ƒ`,Alpha:`Α`,Beta:`Β`,Gamma:`Γ`,Delta:`Δ`,Epsilon:`Ε`,Zeta:`Ζ`,Eta:`Η`,Theta:`Θ`,Iota:`Ι`,Kappa:`Κ`,Lambda:`Λ`,Mu:`Μ`,Nu:`Ν`,Xi:`Ξ`,Omicron:`Ο`,Pi:`Π`,Rho:`Ρ`,Sigma:`Σ`,Tau:`Τ`,Upsilon:`Υ`,Phi:`Φ`,Chi:`Χ`,Psi:`Ψ`,Omega:`Ω`,alpha:`α`,beta:`β`,gamma:`γ`,delta:`δ`,epsilon:`ε`,zeta:`ζ`,eta:`η`,theta:`θ`,iota:`ι`,kappa:`κ`,lambda:`λ`,mu:`μ`,nu:`ν`,xi:`ξ`,omicron:`ο`,pi:`π`,rho:`ρ`,sigmaf:`ς`,sigma:`σ`,tau:`τ`,upsilon:`υ`,phi:`φ`,chi:`χ`,psi:`ψ`,omega:`ω`,thetasym:`ϑ`,upsih:`ϒ`,piv:`ϖ`,bull:`•`,hellip:`…`,prime:`′`,Prime:`″`,oline:`‾`,frasl:`⁄`,weierp:`℘`,image:`ℑ`,real:`ℜ`,trade:`™`,alefsym:`ℵ`,larr:`←`,uarr:`↑`,rarr:`→`,darr:`↓`,harr:`↔`,crarr:`↵`,lArr:`⇐`,uArr:`⇑`,rArr:`⇒`,dArr:`⇓`,hArr:`⇔`,forall:`∀`,part:`∂`,exist:`∃`,empty:`∅`,nabla:`∇`,isin:`∈`,notin:`∉`,ni:`∋`,prod:`∏`,sum:`∑`,minus:`−`,lowast:`∗`,radic:`√`,prop:`∝`,infin:`∞`,ang:`∠`,and:`∧`,or:`∨`,cap:`∩`,cup:`∪`,int:`∫`,there4:`∴`,sim:`∼`,cong:`≅`,asymp:`≈`,ne:`≠`,equiv:`≡`,le:`≤`,ge:`≥`,sub:`⊂`,sup:`⊃`,nsub:`⊄`,sube:`⊆`,supe:`⊇`,oplus:`⊕`,otimes:`⊗`,perp:`⊥`,sdot:`⋅`,lceil:`⌈`,rceil:`⌉`,lfloor:`⌊`,rfloor:`⌋`,lang:`〈`,rang:`〉`,loz:`◊`,spades:`♠`,clubs:`♣`,hearts:`♥`,diams:`♦`,quot:`"`,amp:`&`,lt:`<`,gt:`>`,OElig:`Œ`,oelig:`œ`,Scaron:`Š`,scaron:`š`,Yuml:`Ÿ`,circ:`ˆ`,tilde:`˜`,ensp:` `,emsp:` `,thinsp:` `,zwnj:`‌`,zwj:`‍`,lrm:`‎`,rlm:`‏`,ndash:`–`,mdash:`—`,lsquo:`‘`,rsquo:`’`,sbquo:`‚`,ldquo:`“`,rdquo:`”`,bdquo:`„`,dagger:`†`,Dagger:`‡`,permil:`‰`,lsaquo:`‹`,rsaquo:`›`,euro:`€`},Kt=[`cent`,`copy`,`divide`,`gt`,`lt`,`not`,`para`,`times`],qt={}.hasOwnProperty,Jt={},Yt;for(Yt in Gt)qt.call(Gt,Yt)&&(Jt[Gt[Yt]]=Yt);var Xt=/[^\dA-Za-z]/;function Zt(e,t,n,r){let i=String.fromCharCode(e);if(qt.call(Jt,i)){let e=Jt[i],a=`&`+e;return n&&Wt.includes(e)&&!Kt.includes(e)&&(!r||t&&t!==61&&Xt.test(String.fromCharCode(t)))?a:a+`;`}return``}function Qt(e,t,n){let r=Vt(e,t,n.omitOptionalSemicolons),i;if((n.useNamedReferences||n.useShortestReferences)&&(i=Zt(e,t,n.omitOptionalSemicolons,n.attribute)),(n.useShortestReferences||!i)&&n.useShortestReferences){let i=Ut(e,t,n.omitOptionalSemicolons);i.length<r.length&&(r=i)}return i&&(!n.useShortestReferences||i.length<r.length)?i:r}function $t(e,t){return Lt(e,Object.assign({format:Qt},t))}var en=/^>|^->|<!--|-->|--!>|<!-$/g,tn=[`>`],nn=[`<`,`>`];function rn(e,t,n,r){return r.settings.bogusComments?`<?`+$t(e.value,Object.assign({},r.settings.characterReferences,{subset:tn}))+`>`:`<!--`+e.value.replace(en,i)+`-->`;function i(e){return $t(e,Object.assign({},r.settings.characterReferences,{subset:nn}))}}function an(e,t,n,r){return`<!`+(r.settings.upperDoctype?`DOCTYPE`:`doctype`)+(r.settings.tightDoctype?``:` `)+`html>`}function on(e,t){let n=String(e);if(typeof t!=`string`)throw TypeError(`Expected character`);let r=0,i=n.indexOf(t);for(;i!==-1;)r++,i=n.indexOf(t,i+t.length);return r}function sn(e,t){let n=t||{};return(e[e.length-1]===``?[...e,``]:e).join((n.padRight?` `:``)+`,`+(n.padLeft===!1?``:` `)).trim()}function cn(e){return e.join(` `).trim()}var ln=/[ \t\n\f\r]/g;function un(e){return typeof e==`object`?e.type===`text`&&dn(e.value):dn(e)}function dn(e){return e.replace(ln,``)===``}var F=mn(1),fn=mn(-1),pn=[];function mn(e){return t;function t(t,n,r){let i=t?t.children:pn,a=(n||0)+e,o=i[a];if(!r)for(;o&&un(o);)a+=e,o=i[a];return o}}var hn={}.hasOwnProperty;function gn(e){return t;function t(t,n,r){return hn.call(e,t.tagName)&&e[t.tagName](t,n,r)}}var _n=gn({body:bn,caption:vn,colgroup:vn,dd:wn,dt:Cn,head:vn,html:yn,li:Sn,optgroup:En,option:Dn,p:xn,rp:Tn,rt:Tn,tbody:kn,td:Mn,tfoot:An,th:Mn,thead:On,tr:jn});function vn(e,t,n){let r=F(n,t,!0);return!r||r.type!==`comment`&&!(r.type===`text`&&un(r.value.charAt(0)))}function yn(e,t,n){let r=F(n,t);return!r||r.type!==`comment`}function bn(e,t,n){let r=F(n,t);return!r||r.type!==`comment`}function xn(e,t,n){let r=F(n,t);return r?r.type===`element`&&(r.tagName===`address`||r.tagName===`article`||r.tagName===`aside`||r.tagName===`blockquote`||r.tagName===`details`||r.tagName===`div`||r.tagName===`dl`||r.tagName===`fieldset`||r.tagName===`figcaption`||r.tagName===`figure`||r.tagName===`footer`||r.tagName===`form`||r.tagName===`h1`||r.tagName===`h2`||r.tagName===`h3`||r.tagName===`h4`||r.tagName===`h5`||r.tagName===`h6`||r.tagName===`header`||r.tagName===`hgroup`||r.tagName===`hr`||r.tagName===`main`||r.tagName===`menu`||r.tagName===`nav`||r.tagName===`ol`||r.tagName===`p`||r.tagName===`pre`||r.tagName===`section`||r.tagName===`table`||r.tagName===`ul`):!n||n.type!==`element`||n.tagName!==`a`&&n.tagName!==`audio`&&n.tagName!==`del`&&n.tagName!==`ins`&&n.tagName!==`map`&&n.tagName!==`noscript`&&n.tagName!==`video`}function Sn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`li`}function Cn(e,t,n){let r=F(n,t);return!(!r||r.type!==`element`||r.tagName!==`dt`&&r.tagName!==`dd`)}function wn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`dt`||r.tagName===`dd`)}function Tn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`rp`||r.tagName===`rt`)}function En(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`optgroup`}function Dn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`option`||r.tagName===`optgroup`)}function On(e,t,n){let r=F(n,t);return!(!r||r.type!==`element`||r.tagName!==`tbody`&&r.tagName!==`tfoot`)}function kn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`tbody`||r.tagName===`tfoot`)}function An(e,t,n){return!F(n,t)}function jn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`tr`}function Mn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`td`||r.tagName===`th`)}var Nn=gn({body:In,colgroup:Ln,head:Fn,html:Pn,tbody:Rn});function Pn(e){let t=F(e,-1);return!t||t.type!==`comment`}function Fn(e){let t=new Set;for(let n of e.children)if(n.type===`element`&&(n.tagName===`base`||n.tagName===`title`)){if(t.has(n.tagName))return!1;t.add(n.tagName)}let n=e.children[0];return!n||n.type===`element`}function In(e){let t=F(e,-1,!0);return!t||t.type!==`comment`&&!(t.type===`text`&&un(t.value.charAt(0)))&&(t.type!==`element`||t.tagName!==`meta`&&t.tagName!==`link`&&t.tagName!==`script`&&t.tagName!==`style`&&t.tagName!==`template`)}function Ln(e,t,n){let r=fn(n,t),i=F(e,-1,!0);return n&&r&&r.type===`element`&&r.tagName===`colgroup`&&_n(r,n.children.indexOf(r),n)?!1:!!(i&&i.type===`element`&&i.tagName===`col`)}function Rn(e,t,n){let r=fn(n,t),i=F(e,-1);return n&&r&&r.type===`element`&&(r.tagName===`thead`||r.tagName===`tbody`)&&_n(r,n.children.indexOf(r),n)?!1:!!(i&&i.type===`element`&&i.tagName===`tr`)}var zn={name:[[`	
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./highlights-D_ljK_Z4.js","./stream-tokenizer-DkKPrehc.js","./shiki-CapoJMd6.js","./core-DiB2ds4Q.js"])))=>i.map(i=>d[i]);
+import{n as e,r as t,t as n}from"./rolldown-runtime-XKyaHtl9.js";(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),t.credentials=e.crossOrigin===`use-credentials`?`include`:e.crossOrigin===`anonymous`?`omit`:`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var r=`github-dark-default`,i=`#0d1117`,a=Object.assign({"../sketches/sketch-1.js":`// Circle\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  circle(width / 2, height / 2, 133);\r
+}\r
+`,"../sketches/sketch-2.js":`// Circle, moving back and forth\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  circle(width / 2 + sin(millis() / 500) * 133, height / 2, 133);\r
+}\r
+`,"../sketches/sketch-3.js":`// Circle launched from a mouse press\r
+let circleX = null;\r
+let circleY = null;\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circle\r
+  if (circleX !== null) {\r
+    circleX = circleX + 5;\r
+  }\r
+  // clear circle\r
+  if (circleX > width) {\r
+    circleX = null;\r
+  }\r
+  // draw circle\r
+  if (circleX !== null) {\r
+    circle(circleX, circleY, 133);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  circleX = mouseX;\r
+  circleY = mouseY;\r
+}\r
+`,"../sketches/sketch-4.js":`// Circles launched from mouse presses, stored in an array\r
+let circles = [];\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circles[i].x = circles[i].x + 5;\r
+  }\r
+  // clear circles\r
+  // loop backwards so removing a circle doesn't skip the next one\r
+  for (let i = circles.length - 1; i >= 0; i--) {\r
+    if (circles[i].x > width) {\r
+      circles.splice(i, 1);\r
+    }\r
+  }\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, 133);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  circles.push({ x: mouseX, y: mouseY });\r
+}\r
+`,"../sketches/sketch-4.vs-3.js":`// Circles launched from mouse presses, stored in an array\r
+let circles = [];\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circle\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circles[i].x = circles[i].x + 5;\r
+  }\r
+  // clear circle\r
+  // loop backwards so removing a circle doesn't skip the next one\r
+  for (let i = circles.length - 1; i >= 0; i--) {\r
+    if (circles[i].x > width) {\r
+      circles.splice(i, 1);\r
+    }\r
+  }\r
+  // draw circle\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, 133);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  circles.push({ x: mouseX, y: mouseY });\r
+}\r
+`,"../sketches/sketch-5.js":`// Circles launched from mouse presses, organized into functions\r
+let circles = [];\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circles\r
+  updateAllCircles();\r
+  // clear circles\r
+  cleanUpAllCircles();\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, 133);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  createCircle(mouseX, mouseY)\r
+}\r
+\r
+function createCircle(x, y) {\r
+  const newCircle = { x: x, y: y }\r
+  circles.push(newCircle)\r
+}\r
+\r
+function updateCircle(c) {\r
+  c.x = c.x + 5;\r
+}\r
+\r
+function isOffScreen(c) {\r
+  return c.x > width;\r
+}\r
+\r
+function updateAllCircles() {\r
+  for (let i = 0; i < circles.length; i++) {\r
+    updateCircle(circles[i]);\r
+  }\r
+}\r
+\r
+function cleanUpAllCircles() {\r
+  let onScreenCircles = [];\r
+  for (let i = 0; i < circles.length; i++) {\r
+    if (!isOffScreen(circles[i])) {\r
+      onScreenCircles.push(circles[i]);\r
+    }\r
+  }\r
+  circles = onScreenCircles;\r
+}\r
+`,"../sketches/sketch-6.js":`// Circles launched from mouse presses, with a slider for the radius\r
+let circles = [];\r
+let radiusSlider;\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+  radiusSlider = createSlider(7, 133, 33);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  let radius = radiusSlider.value();\r
+  // update circles\r
+  updateAllCircles();\r
+  // clear circles\r
+  cleanUpAllCircles();\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, radius * 2);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  createCircle(mouseX, mouseY)\r
+}\r
+\r
+function createCircle(x, y) {\r
+  const newCircle = { x: x, y: y }\r
+  circles.push(newCircle)\r
+}\r
+\r
+function updateCircle(c) {\r
+  c.x = c.x + 5;\r
+}\r
+\r
+function isOffScreen(c) {\r
+  return c.x > width;\r
+}\r
+\r
+function updateAllCircles() {\r
+  for (let i = 0; i < circles.length; i++) {\r
+    updateCircle(circles[i]);\r
+  }\r
+}\r
+\r
+function cleanUpAllCircles() {\r
+  let onScreenCircles = [];\r
+  for (let i = 0; i < circles.length; i++) {\r
+    if (!isOffScreen(circles[i])) {\r
+      onScreenCircles.push(circles[i]);\r
+    }\r
+  }\r
+  circles = onScreenCircles;\r
+}\r
+`,"../sketches/sketch-7.js":`// Circles launched from mouse presses, each keeping the slider radius from its launch\r
+let circles = [];\r
+let radiusSlider;\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+  radiusSlider = createSlider(7, 133, 33);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circles\r
+  updateAllCircles();\r
+  // clear circles\r
+  cleanUpAllCircles();\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, circles[i].radius * 2);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  createCircle(mouseX, mouseY, radiusSlider.value())\r
+}\r
+\r
+function createCircle(x, y, radius) {\r
+  const newCircle = { x: x, y: y, radius: radius }\r
+  circles.push(newCircle)\r
+}\r
+\r
+function updateCircle(c) {\r
+  c.x = c.x + 5;\r
+}\r
+\r
+function isOffScreen(c) {\r
+  return c.x > width;\r
+}\r
+\r
+function updateAllCircles() {\r
+  for (let i = 0; i < circles.length; i++) {\r
+    updateCircle(circles[i]);\r
+  }\r
+}\r
+\r
+function cleanUpAllCircles() {\r
+  let onScreenCircles = [];\r
+  for (let i = 0; i < circles.length; i++) {\r
+    if (!isOffScreen(circles[i])) {\r
+      onScreenCircles.push(circles[i]);\r
+    }\r
+  }\r
+  circles = onScreenCircles;\r
+}\r
+`,"../sketches/sketch-8.js":`// Circles launched from mouse presses, with speed wobbled by noise\r
+let circles = [];\r
+let radiusSlider;\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+  radiusSlider = createSlider(7, 133, 33);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circles\r
+  updateAllCircles();\r
+  // clear circles\r
+  cleanUpAllCircles();\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    circle(circles[i].x, circles[i].y, circles[i].radius * 2);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  createCircle(mouseX, mouseY, radiusSlider.value())\r
+}\r
+\r
+function createCircle(x, y, radius) {\r
+  // seed: a random starting point in the noise, so each circle wobbles differently\r
+  const newCircle = { x: x, y: y, radius: radius, seed: random(1000) }\r
+  circles.push(newCircle)\r
+}\r
+\r
+function updateCircle(c) {\r
+  // noise() returns a smooth random value between 0 and 1 that changes slowly with time\r
+  c.x = c.x + 5 + (noise(c.seed + millis() / 1000) - 0.5) * 10;\r
+  // + 100 reads a different part of the noise, so y wobbles independently of x\r
+  c.y = c.y + (noise(c.seed + millis() / 1000 + 100) - 0.5) * 10;\r
+}\r
+\r
+function isOffScreen(c) {\r
+  return c.x > width;\r
+}\r
+\r
+function updateAllCircles() {\r
+  for (let i = 0; i < circles.length; i++) {\r
+    updateCircle(circles[i]);\r
+  }\r
+}\r
+\r
+function cleanUpAllCircles() {\r
+  let onScreenCircles = [];\r
+  for (let i = 0; i < circles.length; i++) {\r
+    if (!isOffScreen(circles[i])) {\r
+      onScreenCircles.push(circles[i]);\r
+    }\r
+  }\r
+  circles = onScreenCircles;\r
+}\r
+`,"../sketches/sketch-9.js":`// Each launch is a ring of 10 circles orbiting the launch point as it moves\r
+let circles = [];\r
+let radiusSlider;\r
+\r
+function setup() {\r
+  createCanvas(640, 360);\r
+  radiusSlider = createSlider(7, 133, 33);\r
+}\r
+\r
+function draw() {\r
+  background(20);\r
+  noFill();\r
+  stroke(255);\r
+  // update circles\r
+  updateAllCircles();\r
+  // clear circles\r
+  cleanUpAllCircles();\r
+  // draw circles\r
+  for (let i = 0; i < circles.length; i++) {\r
+    renderOrbitingCircle(circles[i]);\r
+  }\r
+}\r
+\r
+// draws 10 small circles orbiting the launch point, at distance radius\r
+function renderOrbitingCircle(c) {\r
+  const age = (millis() - c.launchTime) / 1000; // seconds since launch\r
+  for (let i = 0; i < 10; i++) {\r
+    const angle = age + (i / 10) * TWO_PI; // spread evenly around the ring, turning with age\r
+    const x = c.x + cos(angle) * c.radius;\r
+    const y = c.y + sin(angle) * c.radius;\r
+    circle(x, y, 13);\r
+  }\r
+}\r
+\r
+function mousePressed() {\r
+  createCircle(mouseX, mouseY, radiusSlider.value())\r
+}\r
+\r
+function createCircle(x, y, radius) {\r
+  // seed: a random starting point in the noise, so each circle wobbles differently\r
+  // launchTime: when it was launched, so the orbit can be a function of age\r
+  const newCircle = { x: x, y: y, radius: radius, seed: random(1000), launchTime: millis() }\r
+  circles.push(newCircle)\r
+}\r
+\r
+function updateCircle(c) {\r
+  // noise() returns a smooth random value between 0 and 1 that changes slowly with time\r
+  c.x = c.x + 5 + (noise(c.seed + millis() / 1000) - 0.5) * 10;\r
+  // + 100 reads a different part of the noise, so y wobbles independently of x\r
+  c.y = c.y + (noise(c.seed + millis() / 1000 + 100) - 0.5) * 10;\r
+}\r
+\r
+function isOffScreen(c) {\r
+  return c.x > width;\r
+}\r
+\r
+function updateAllCircles() {\r
+  for (let i = 0; i < circles.length; i++) {\r
+    updateCircle(circles[i]);\r
+  }\r
+}\r
+\r
+function cleanUpAllCircles() {\r
+  let onScreenCircles = [];\r
+  for (let i = 0; i < circles.length; i++) {\r
+    if (!isOffScreen(circles[i])) {\r
+      onScreenCircles.push(circles[i]);\r
+    }\r
+  }\r
+  circles = onScreenCircles;\r
+}\r
+`}),o=/^sketch-(\d+)(?:\.vs-(\d+))?\.js$/,s=[],c=new Map;for(let[e,t]of Object.entries(a)){let n=e.split(`/`).pop(),r=n.match(o);if(!r)continue;let i=Number(r[1]),a={file:`sketch-${i}.js`,key:n,number:i,source:t,summary:t.match(/^\s*\/\/\s*(.+)/)?.[1]?.trim()??``};r[2]?c.set(`${i} vs ${r[2]}`,a):s.push(a)}var l=s.sort((e,t)=>e.number-t.number);function u(e,t){return c.get(`${e.number} vs ${t.number}`)??e}var d=`diffs-container`,f=/(?=^diff --git)/gm,p=/(?<=\n)/,m=/^(---|\+\+\+)\s+([^\t\r\n]+)/,h=/^index ([0-9a-f]+)\.\.([0-9a-f]+)(?: (\d+))?$/i,g=`header-prefix`,_=`header-filename-suffix`,v=`header-metadata`,y=`header-custom`,b={dark:`pierre-dark`,light:`pierre-light`},x=`data-theme-css`,S=`data-unsafe-css`,C=`data-diffs-scrollbar-measure`,w=`--diffs-scrollbar-gutter-measured`,T=1e5,ee=Object.freeze({fromStart:0,fromEnd:0}),te={startingLine:0,totalLines:1/0,bufferBefore:0,bufferAfter:0},ne=Object.freeze([]),re={startingLine:0,totalLines:0,bufferBefore:0,bufferAfter:0},E,ie=0,ae=class extends Error{constructor(){super(`Highlighter is disposed`),this.name=`HighlighterDisposedError`}};function oe(){return E}function se(e){return e??E??`shiki-js`}function ce(e){if(E!=null&&E!==e)throw Error(`Cannot load the "${e}" highlighter while "${E}" is in use. Only one highlighter type can be active at a time; dispose every "${E}" instance (disposeHighlighter() disposes the shared one) before switching.`)}function le(e){ce(e),E=e,ie++}function ue(){ie--,ie===0&&(E=void 0)}var de=new Map,fe=new Map,pe=new Map,me=new Set;function he(e=b){let t=[];return typeof e==`string`?t.push(e):(t.push(e.dark),t.push(e.light)),t}function ge(){return typeof WorkerGlobalScope<`u`&&typeof self<`u`&&self instanceof WorkerGlobalScope}function _e(e){let t;return()=>t??=e().then(e=>(t=e,e),e=>{throw t=void 0,e})}function ve(e){return typeof e==`object`&&e&&`default`in e?e.default:e}var ye=class extends Error{constructor(e){super(`Theme "${e}" is already registered`),this.name=`DuplicateThemeError`}},be=class extends Error{constructor(e){super(`No loader registered for theme "${e}"`),this.name=`UnregisteredThemeError`}},xe=class extends Error{constructor(e){super(`Theme "${e}" has not been resolved`),this.name=`UnresolvedThemeError`}};function Se(e={}){let t=new Map,n=new Map,r=new Map,i=0;function a(e,n){if(t.has(e))throw new ye(e);t.set(e,n)}function o(e,n){return!t.has(e)&&(t.set(e,n),!0)}function s(e){return t.has(e)}function c(a){let o=n.get(a);if(o!==void 0)return Promise.resolve(o);let s=r.get(a);if(s!==void 0)return s;let c=t.get(a);if(c===void 0&&e.fallbackLoader===void 0)return Promise.reject(new be(a));let l=i,u=Promise.resolve().then(()=>c===void 0?e.fallbackLoader?.(a):c()).then(async t=>{if(t===void 0)throw new be(a);let o=ve(t),s=e.normalizeTheme===void 0?o:await e.normalizeTheme(o,a);return l===i&&n.set(a,s),r.get(a)===u&&r.delete(a),s}).catch(e=>{throw r.get(a)===u&&r.delete(a),e});return r.set(a,u),u}function l(e){return Promise.all(e.map(e=>c(e)))}function u(e,t){n.set(e,t)}function d(e){for(let[t,n]of e)u(t,n)}function f(e){return n.get(e)}function p(e){let t=[];for(let r of e){let e=n.get(r);if(e===void 0)throw new xe(r);t.push(e)}return t}function m(e){return n.has(e)}function h(e){for(let t of e)if(!n.has(t))return!1;return!0}function g(e){let t=n.get(e);return t===void 0?c(e):t}function _(){i++,n.clear(),r.clear()}return{clearResolvedThemes:_,getResolvedOrResolveTheme:g,getResolvedTheme:f,getResolvedThemes:p,hasRegisteredTheme:s,hasResolvedTheme:m,hasResolvedThemes:h,registerTheme:a,registerThemeIfAbsent:o,resolveTheme:c,resolveThemes:l,seedResolvedTheme:u,seedResolvedThemes:d}}var Ce=`modulepreload`,we=function(e,t){return new URL(e,t).href},Te={},Ee=function(e){return e.pathname.endsWith(`.css`)},De=function(e,t,n){if(t in e)return e[t];let r=n();if(!r){e[t]=void 0;return}let i=r.then(()=>{e[t]=void 0},n=>{throw e[t]=void 0,n});return e[t]=i,i},Oe=function(e,t,n){let r=Promise.resolve();if(t&&t.length>0){let e,i=document.querySelector(`meta[property=csp-nonce]`),a=i?.nonce||i?.getAttribute(`nonce`);function o(e){return Promise.all(e.map(e=>Promise.resolve(e).then(e=>({status:`fulfilled`,value:e}),e=>({status:`rejected`,reason:e}))))}function s(e){return import.meta.resolve?new URL(import.meta.resolve(e)):new URL(e,import.meta.url)}r=o(t.map(t=>{t=we(t,n);let r=s(t),i=Ee(r);return De(Te,r.href,()=>{if(e===void 0){e={all:new Set,styles:new Set};let t=document.getElementsByTagName(`link`);for(let n=t.length-1;n>=0;n--){let r=t[n];e.all.add(r.href),r.rel===`stylesheet`&&e.styles.add(r.href)}}if((i?e.styles:e.all).has(r.href))return;let t=document.createElement(`link`);if(t.rel=i?`stylesheet`:Ce,i||(t.as=`script`),t.crossOrigin=``,t.href=r.href,a&&t.setAttribute(`nonce`,a),document.head.appendChild(t),i)return new Promise((e,n)=>{t.addEventListener(`load`,e),t.addEventListener(`error`,()=>n(Error(`Unable to preload CSS for ${r}`)))})})}).filter(e=>e!==void 0))}function i(e){let t=new Event(`vite:preloadError`,{cancelable:!0});if(t.payload=e,window.dispatchEvent(t),!t.defaultPrevented)throw e}return r.then(t=>{for(let e of t||[])e.status===`rejected`&&i(e.reason);return e().catch(i)})},ke=new Map,Ae=new Map,je=_e(()=>Oe(()=>import(`./loader-RrMWjlSV.js`),[],import.meta.url)),Me=_e(()=>Oe(()=>import(`./themes-BWV3d_v9.js`),[],import.meta.url)),Ne=_e(()=>Oe(()=>import(`./core-DiB2ds4Q.js`),[],import.meta.url)),Pe=[[`editor.lineHighlightBackground`,`editor.active_line.background`],[`editor.selectionBackground`,`element.selected`],[`editor.findMatchBackground`,`search.match_background`],[`editor.findMatchHighlightBackground`,`search.match_background`],[`editorBracketMatch.background`,`editor.document_highlight.bracket_background`],[`editorError.foreground`,`error`],[`editorWarning.foreground`,`warning`],[`editorInfo.foreground`,`info`],[`editorHint.foreground`,`hint`],[`gitDecoration.addedResourceForeground`,`created`,`terminal.ansi.green`],[`gitDecoration.deletedResourceForeground`,`deleted`,`terminal.ansi.red`],[`gitDecoration.modifiedResourceForeground`,`modified`,`terminal.ansi.blue`]];function Fe(e,t){let n=`themes`in t?t.themes[0]:t;if(n==null)throw Error(`Theme "${e}" is an empty Zed theme family.`);let r={...n,name:e},i={};for(let[e,t]of Object.entries(r.style))typeof t==`string`&&(i[e]=t);let a=r.style.players?.[0];a?.cursor!=null&&(i[`editorCursor.foreground`]??=a.cursor),a?.selection!=null&&(i[`editor.selectionBackground`]??=a.selection);for(let[e,...t]of Pe){if(i[e]!=null)continue;let n=t.find(e=>i[e]!=null);n!=null&&(i[e]=i[n])}if(r.cssVariables===!0)i[`editor.foreground`]=`var(--hls-foreground)`,i[`editor.background`]=`var(--hls-background)`;else if(typeof r.cssVariables==`object`){i[`editor.foreground`]??=i.text??i.foreground??`foreground`,i[`editor.background`]??=i.background??`background`;let{prefix:e=`--hls-`,defaults:t}=r.cssVariables;for(let[n,r]of Object.entries(i)){let a=t?.[r];i[n]=`var(${e}${r}${a?`, ${a}`:``})`}}let o=r.appearance===`light`?`light`:`dark`;return{name:e,type:o,colors:i,zed:r,fg:i[`editor.foreground`]??i.text??i.foreground??(o===`light`?`#333333`:`#bbbbbb`),bg:i[`editor.background`]??i.background??(o===`light`?`#ffffff`:`#1e1e1e`)}}function Ie(e){let t=Ae.get(e);return t??(t=Se({fallbackLoader:async t=>{if(typeof __DIFFS_WORKER__<`u`?__DIFFS_WORKER__:ge())throw Error(`Theme "${t}" cannot be resolved from a worker context. Themes must be pre-resolved on the main thread and passed to the worker via the resolvedThemes parameter.`);let n=ke.get(t);if(e===`highlights`){let e=n?.zed??n?.diffs;if(e!=null){let n=await e(),r=`default`in n?n.default:n;if(`zed`in r&&r.zed!=null)return r;if(`style`in r||`themes`in r)return Fe(t,r);throw Error(`Theme "${t}" is a TextMate theme; register a Zed theme with registerCustomTheme(name, loader, 'zed') for Highlights.`)}let r=je(),{themes:i}=r instanceof Promise?await r:r,a=i[t];if(a!=null)return Fe(t,(await a()).default);if(n?.textmate!=null)throw Error(`Theme "${t}" is only registered for TextMate; use registerCustomTheme(name, loader, 'zed') for Highlights.`)}else{let e=n?.textmate??n?.diffs,r;if(e!=null){let t=await e();r=`default`in t?t.default:t}else{let e=Me(),{themes:i}=e instanceof Promise?await e:e,a=i.getTheme(t);if(a==null&&n?.zed!=null)throw Error(`Theme "${t}" is only registered for Zed; use registerCustomTheme(name, loader, 'textmate') for Shiki.`);if(a==null)throw Error(`No valid theme loader registered for "${t}"`);let o=await a.load();r=`default`in o?o.default:o}if(`style`in r||`themes`in r)throw Error(`Theme "${t}" is a Zed theme; use preferredHighlighter: 'highlights' or register a TextMate theme for Shiki.`);let i=Ne(),{normalizeTheme:a,createCssVariablesTheme:o}=i instanceof Promise?await i:i;if(`cssVariables`in r&&r.cssVariables!=null)return{...r,textmate:a(o(r.cssVariables))};if(`textmate`in r&&r.textmate!=null)return{...r,textmate:a(r.textmate)};let s=a(r);return{name:s.name,type:s.type,fg:s.fg,bg:s.bg,colors:s.colors,textmate:s}}throw Error(`No valid theme loader registered for "${t}"`)},normalizeTheme:(e,t)=>{if(e.name!==t)throw Error(`resolvedTheme: themeName: ${t} does not match theme.name: ${e.name}`);return e}}),Ae.set(e,t)),t}function Le(e,t=se()){return typeof t!=`string`&&t.isDisposed?!1:(typeof t==`string`?Ie(t):t.themeResolver).hasResolvedThemes(he(e))}var Re;async function ze(e){let t=se(e);le(t);try{if(t===`highlights`){let{HighlightsHighlighter:e}=await Oe(async()=>{let{HighlightsHighlighter:e}=await import(`./highlights-D_ljK_Z4.js`);return{HighlightsHighlighter:e}},__vite__mapDeps([0,1]),import.meta.url);return new e}let{ShikiHighlighter:e}=await Oe(async()=>{let{ShikiHighlighter:e}=await import(`./shiki-CapoJMd6.js`);return{ShikiHighlighter:e}},__vite__mapDeps([2,1,3]),import.meta.url);return await e.create(t)}finally{ue()}}async function Be({themes:e,langs:t,preferredHighlighter:n}){Ve();let r=Re??=ze(oe()??n),i;try{i=await r}catch(e){throw Re===r&&(Re=void 0),e}if(Re===r&&(Re=i),await Promise.all([i.themeResolver.resolveThemes(e),i.loadLanguages(t)]),i.isDisposed)throw new ae;return i}function Ve(){Re!=null&&!(`then`in Re)&&Re.isDisposed&&(Re=void 0)}function He({theme:e,lang:t,langs:n}={}){Ve();let r=Re;if(!(r==null||`then`in r||e!=null&&!Le(e,r)||(t!=null||n!=null)&&!r.hasLoadedLanguages([...t==null?[]:[t],...n??[]])))return r}var Ue=new Set,We=null;function Ge(e){Ue.add(e),We??=requestAnimationFrame(qe)}function Ke(e){Ue.delete(e)&&Ue.size===0&&We!=null&&(cancelAnimationFrame(We),We=null)}function qe(e){let t=new Set(Ue);Ue.clear();for(let n of t)try{n(e)}catch(e){console.error(e)}We=Ue.size>0?requestAnimationFrame(qe):null}function Je(e,t){return e==null||t==null||typeof e==`string`||typeof t==`string`?e===t:e.dark===t.dark&&e.light===t.light}function Ye(e,t){return e?.start===t?.start&&e?.end===t?.end&&e?.side===t?.side&&e?.endSide===t?.endSide}function Xe(e){return{type:`text`,value:e}}function D({tagName:e,children:t=[],properties:n={}}){return{type:`element`,tagName:e,properties:n,children:t}}function Ze({name:e,width:t=16,height:n=16,properties:r}){return D({tagName:`svg`,properties:{width:t,height:n,viewBox:`0 0 16 16`,...r},children:[D({tagName:`use`,properties:{href:`#${e.replace(/^#/,``)}`}})]})}function Qe(e){return D({tagName:`div`,properties:{"data-gutter":``},children:e})}function $e(e,t,n,r={}){return D({tagName:`div`,properties:{"data-line-type":e,"data-column-number":t,"data-line-index":n,...r},children:t==null?void 0:[D({tagName:`span`,properties:{"data-line-number-content":``},children:[Xe(`${t}`)]})]})}function O(e,t,n){return D({tagName:`div`,properties:{"data-gutter-buffer":t,"data-buffer-size":n,"data-line-type":t===`annotation`?void 0:e,style:t===`annotation`?`grid-row: span ${n};`:`grid-row: span ${n};min-height:calc(${n} * 1lh);`}})}function et(){return D({tagName:`button`,properties:{"data-utility-button":``,type:`button`},children:[Ze({name:`diffs-icon-plus`,properties:{"data-icon":``}})]})}var tt=[`area`,`base`,`basefont`,`bgsound`,`br`,`col`,`command`,`embed`,`frame`,`hr`,`image`,`img`,`input`,`keygen`,`link`,`meta`,`param`,`source`,`track`,`wbr`],nt=class{constructor(e,t,n){this.normal=t,this.property=e,n&&(this.space=n)}};nt.prototype.normal={},nt.prototype.property={},nt.prototype.space=void 0;function rt(e,t){let n={},r={};for(let t of e)Object.assign(n,t.property),Object.assign(r,t.normal);return new nt(n,r,t)}function it(e){return e.toLowerCase()}var k=class{constructor(e,t){this.attribute=t,this.property=e}};k.prototype.attribute=``,k.prototype.booleanish=!1,k.prototype.boolean=!1,k.prototype.commaOrSpaceSeparated=!1,k.prototype.commaSeparated=!1,k.prototype.defined=!1,k.prototype.mustUseProperty=!1,k.prototype.number=!1,k.prototype.overloadedBoolean=!1,k.prototype.property=``,k.prototype.spaceSeparated=!1,k.prototype.space=void 0;var at=e({boolean:()=>A,booleanish:()=>j,commaOrSpaceSeparated:()=>P,commaSeparated:()=>ct,number:()=>M,overloadedBoolean:()=>st,spaceSeparated:()=>N}),ot=0,A=lt(),j=lt(),st=lt(),M=lt(),N=lt(),ct=lt(),P=lt();function lt(){return 2**++ot}var ut=Object.keys(at),dt=class extends k{constructor(e,t,n,r){let i=-1;if(super(e,t),ft(this,`space`,r),typeof n==`number`)for(;++i<ut.length;){let e=ut[i];ft(this,ut[i],(n&at[e])===at[e])}}};dt.prototype.defined=!0;function ft(e,t,n){n&&(e[t]=n)}function pt(e){let t={},n={};for(let[r,i]of Object.entries(e.properties)){let a=new dt(r,e.transform(e.attributes||{},r),i,e.space);e.mustUseProperty&&e.mustUseProperty.includes(r)&&(a.mustUseProperty=!0),t[r]=a,n[it(r)]=r,n[it(a.attribute)]=r}return new nt(t,n,e.space)}var mt=pt({properties:{ariaActiveDescendant:null,ariaAtomic:j,ariaAutoComplete:null,ariaBusy:j,ariaChecked:j,ariaColCount:M,ariaColIndex:M,ariaColSpan:M,ariaControls:N,ariaCurrent:null,ariaDescribedBy:N,ariaDetails:null,ariaDisabled:j,ariaDropEffect:N,ariaErrorMessage:null,ariaExpanded:j,ariaFlowTo:N,ariaGrabbed:j,ariaHasPopup:null,ariaHidden:j,ariaInvalid:null,ariaKeyShortcuts:null,ariaLabel:null,ariaLabelledBy:N,ariaLevel:M,ariaLive:null,ariaModal:j,ariaMultiLine:j,ariaMultiSelectable:j,ariaOrientation:null,ariaOwns:N,ariaPlaceholder:null,ariaPosInSet:M,ariaPressed:j,ariaReadOnly:j,ariaRelevant:null,ariaRequired:j,ariaRoleDescription:N,ariaRowCount:M,ariaRowIndex:M,ariaRowSpan:M,ariaSelected:j,ariaSetSize:M,ariaSort:null,ariaValueMax:M,ariaValueMin:M,ariaValueNow:M,ariaValueText:null,role:null},transform(e,t){return t===`role`?t:`aria-`+t.slice(4).toLowerCase()}});function ht(e,t){return t in e?e[t]:t}function gt(e,t){return ht(e,t.toLowerCase())}var _t=pt({attributes:{acceptcharset:`accept-charset`,classname:`class`,htmlfor:`for`,httpequiv:`http-equiv`},mustUseProperty:[`checked`,`multiple`,`muted`,`selected`],properties:{abbr:null,accept:ct,acceptCharset:N,accessKey:N,action:null,allow:null,allowFullScreen:A,allowPaymentRequest:A,allowUserMedia:A,alpha:A,alt:null,as:null,async:A,autoCapitalize:null,autoComplete:N,autoFocus:A,autoPlay:A,blocking:N,capture:null,charSet:null,checked:A,cite:null,className:N,closedBy:null,colorSpace:null,cols:M,colSpan:M,command:null,commandFor:null,content:null,contentEditable:j,controls:A,controlsList:N,coords:M|ct,crossOrigin:null,data:null,dateTime:null,decoding:null,default:A,defer:A,dir:null,dirName:null,disabled:A,download:st,draggable:j,encType:null,enterKeyHint:null,fetchPriority:null,form:null,formAction:null,formEncType:null,formMethod:null,formNoValidate:A,formTarget:null,headers:N,height:M,hidden:st,high:M,href:null,hrefLang:null,htmlFor:N,httpEquiv:N,id:null,imageSizes:null,imageSrcSet:null,inert:A,inputMode:null,integrity:null,is:null,isMap:A,itemId:null,itemProp:N,itemRef:N,itemScope:A,itemType:N,kind:null,label:null,lang:null,language:null,list:null,loading:null,loop:A,low:M,manifest:null,max:null,maxLength:M,media:null,method:null,min:null,minLength:M,multiple:A,muted:A,name:null,nonce:null,noModule:A,noValidate:A,onAbort:null,onAfterPrint:null,onAuxClick:null,onBeforeMatch:null,onBeforePrint:null,onBeforeToggle:null,onBeforeUnload:null,onBlur:null,onCancel:null,onCanPlay:null,onCanPlayThrough:null,onChange:null,onClick:null,onClose:null,onContextLost:null,onContextMenu:null,onContextRestored:null,onCopy:null,onCueChange:null,onCut:null,onDblClick:null,onDrag:null,onDragEnd:null,onDragEnter:null,onDragExit:null,onDragLeave:null,onDragOver:null,onDragStart:null,onDrop:null,onDurationChange:null,onEmptied:null,onEnded:null,onError:null,onFocus:null,onFormData:null,onHashChange:null,onInput:null,onInvalid:null,onKeyDown:null,onKeyPress:null,onKeyUp:null,onLanguageChange:null,onLoad:null,onLoadedData:null,onLoadedMetadata:null,onLoadEnd:null,onLoadStart:null,onMessage:null,onMessageError:null,onMouseDown:null,onMouseEnter:null,onMouseLeave:null,onMouseMove:null,onMouseOut:null,onMouseOver:null,onMouseUp:null,onOffline:null,onOnline:null,onPageHide:null,onPageShow:null,onPaste:null,onPause:null,onPlay:null,onPlaying:null,onPopState:null,onProgress:null,onRateChange:null,onRejectionHandled:null,onReset:null,onResize:null,onScroll:null,onScrollEnd:null,onSecurityPolicyViolation:null,onSeeked:null,onSeeking:null,onSelect:null,onSlotChange:null,onStalled:null,onStorage:null,onSubmit:null,onSuspend:null,onTimeUpdate:null,onToggle:null,onUnhandledRejection:null,onUnload:null,onVolumeChange:null,onWaiting:null,onWheel:null,open:A,optimum:M,pattern:null,ping:N,placeholder:null,playsInline:A,popover:null,popoverTarget:null,popoverTargetAction:null,poster:null,preload:null,readOnly:A,referrerPolicy:null,rel:N,required:A,reversed:A,rows:M,rowSpan:M,sandbox:N,scope:null,scoped:A,seamless:A,selected:A,shadowRootClonable:A,shadowRootCustomElementRegistry:A,shadowRootDelegatesFocus:A,shadowRootMode:null,shadowRootSerializable:A,shape:null,size:M,sizes:null,slot:null,span:M,spellCheck:j,src:null,srcDoc:null,srcLang:null,srcSet:null,start:M,step:null,style:null,tabIndex:M,target:null,title:null,translate:null,type:null,typeMustMatch:A,useMap:null,value:j,width:M,wrap:null,writingSuggestions:null,align:null,aLink:null,archive:N,axis:null,background:null,bgColor:null,border:M,borderColor:null,bottomMargin:M,cellPadding:null,cellSpacing:null,char:null,charOff:null,classId:null,clear:null,code:null,codeBase:null,codeType:null,color:null,compact:A,declare:A,event:null,face:null,frame:null,frameBorder:null,hSpace:M,leftMargin:M,link:null,longDesc:null,lowSrc:null,marginHeight:M,marginWidth:M,noResize:A,noHref:A,noShade:A,noWrap:A,object:null,profile:null,prompt:null,rev:null,rightMargin:M,rules:null,scheme:null,scrolling:j,standby:null,summary:null,text:null,topMargin:M,valueType:null,version:null,vAlign:null,vLink:null,vSpace:M,allowTransparency:null,autoCorrect:null,autoSave:null,credentialless:A,disablePictureInPicture:A,disableRemotePlayback:A,exportParts:ct,part:N,prefix:null,property:null,results:M,security:null,unselectable:null},space:`html`,transform:gt}),vt=pt({attributes:{accentHeight:`accent-height`,alignmentBaseline:`alignment-baseline`,arabicForm:`arabic-form`,baselineShift:`baseline-shift`,capHeight:`cap-height`,className:`class`,clipPath:`clip-path`,clipRule:`clip-rule`,colorInterpolation:`color-interpolation`,colorInterpolationFilters:`color-interpolation-filters`,colorProfile:`color-profile`,colorRendering:`color-rendering`,crossOrigin:`crossorigin`,dataType:`datatype`,dominantBaseline:`dominant-baseline`,enableBackground:`enable-background`,fillOpacity:`fill-opacity`,fillRule:`fill-rule`,floodColor:`flood-color`,floodOpacity:`flood-opacity`,fontFamily:`font-family`,fontSize:`font-size`,fontSizeAdjust:`font-size-adjust`,fontStretch:`font-stretch`,fontStyle:`font-style`,fontVariant:`font-variant`,fontWeight:`font-weight`,glyphName:`glyph-name`,glyphOrientationHorizontal:`glyph-orientation-horizontal`,glyphOrientationVertical:`glyph-orientation-vertical`,hrefLang:`hreflang`,horizAdvX:`horiz-adv-x`,horizOriginX:`horiz-origin-x`,horizOriginY:`horiz-origin-y`,imageRendering:`image-rendering`,letterSpacing:`letter-spacing`,lightingColor:`lighting-color`,markerEnd:`marker-end`,markerMid:`marker-mid`,markerStart:`marker-start`,maskType:`mask-type`,navDown:`nav-down`,navDownLeft:`nav-down-left`,navDownRight:`nav-down-right`,navLeft:`nav-left`,navNext:`nav-next`,navPrev:`nav-prev`,navRight:`nav-right`,navUp:`nav-up`,navUpLeft:`nav-up-left`,navUpRight:`nav-up-right`,onAbort:`onabort`,onActivate:`onactivate`,onAfterPrint:`onafterprint`,onBeforePrint:`onbeforeprint`,onBegin:`onbegin`,onCancel:`oncancel`,onCanPlay:`oncanplay`,onCanPlayThrough:`oncanplaythrough`,onChange:`onchange`,onClick:`onclick`,onClose:`onclose`,onCopy:`oncopy`,onCueChange:`oncuechange`,onCut:`oncut`,onDblClick:`ondblclick`,onDrag:`ondrag`,onDragEnd:`ondragend`,onDragEnter:`ondragenter`,onDragExit:`ondragexit`,onDragLeave:`ondragleave`,onDragOver:`ondragover`,onDragStart:`ondragstart`,onDrop:`ondrop`,onDurationChange:`ondurationchange`,onEmptied:`onemptied`,onEnd:`onend`,onEnded:`onended`,onError:`onerror`,onFocus:`onfocus`,onFocusIn:`onfocusin`,onFocusOut:`onfocusout`,onHashChange:`onhashchange`,onInput:`oninput`,onInvalid:`oninvalid`,onKeyDown:`onkeydown`,onKeyPress:`onkeypress`,onKeyUp:`onkeyup`,onLoad:`onload`,onLoadedData:`onloadeddata`,onLoadedMetadata:`onloadedmetadata`,onLoadStart:`onloadstart`,onMessage:`onmessage`,onMouseDown:`onmousedown`,onMouseEnter:`onmouseenter`,onMouseLeave:`onmouseleave`,onMouseMove:`onmousemove`,onMouseOut:`onmouseout`,onMouseOver:`onmouseover`,onMouseUp:`onmouseup`,onMouseWheel:`onmousewheel`,onOffline:`onoffline`,onOnline:`ononline`,onPageHide:`onpagehide`,onPageShow:`onpageshow`,onPaste:`onpaste`,onPause:`onpause`,onPlay:`onplay`,onPlaying:`onplaying`,onPopState:`onpopstate`,onProgress:`onprogress`,onRateChange:`onratechange`,onRepeat:`onrepeat`,onReset:`onreset`,onResize:`onresize`,onScroll:`onscroll`,onSeeked:`onseeked`,onSeeking:`onseeking`,onSelect:`onselect`,onShow:`onshow`,onStalled:`onstalled`,onStorage:`onstorage`,onSubmit:`onsubmit`,onSuspend:`onsuspend`,onTimeUpdate:`ontimeupdate`,onToggle:`ontoggle`,onUnload:`onunload`,onVolumeChange:`onvolumechange`,onWaiting:`onwaiting`,onZoom:`onzoom`,overlinePosition:`overline-position`,overlineThickness:`overline-thickness`,paintOrder:`paint-order`,panose1:`panose-1`,pointerEvents:`pointer-events`,referrerPolicy:`referrerpolicy`,renderingIntent:`rendering-intent`,shapeRendering:`shape-rendering`,stopColor:`stop-color`,stopOpacity:`stop-opacity`,strikethroughPosition:`strikethrough-position`,strikethroughThickness:`strikethrough-thickness`,strokeDashArray:`stroke-dasharray`,strokeDashOffset:`stroke-dashoffset`,strokeLineCap:`stroke-linecap`,strokeLineJoin:`stroke-linejoin`,strokeMiterLimit:`stroke-miterlimit`,strokeOpacity:`stroke-opacity`,strokeWidth:`stroke-width`,tabIndex:`tabindex`,textAnchor:`text-anchor`,textDecoration:`text-decoration`,textRendering:`text-rendering`,transformOrigin:`transform-origin`,typeOf:`typeof`,underlinePosition:`underline-position`,underlineThickness:`underline-thickness`,unicodeBidi:`unicode-bidi`,unicodeRange:`unicode-range`,unitsPerEm:`units-per-em`,vAlphabetic:`v-alphabetic`,vHanging:`v-hanging`,vIdeographic:`v-ideographic`,vMathematical:`v-mathematical`,vectorEffect:`vector-effect`,vertAdvY:`vert-adv-y`,vertOriginX:`vert-origin-x`,vertOriginY:`vert-origin-y`,wordSpacing:`word-spacing`,writingMode:`writing-mode`,xHeight:`x-height`,playbackOrder:`playbackorder`,timelineBegin:`timelinebegin`},properties:{about:P,accentHeight:M,accumulate:null,additive:null,alignmentBaseline:null,alphabetic:M,amplitude:M,arabicForm:null,ascent:M,attributeName:null,attributeType:null,azimuth:M,bandwidth:null,baselineShift:null,baseFrequency:null,baseProfile:null,bbox:null,begin:null,bias:M,by:null,calcMode:null,capHeight:M,className:N,clip:null,clipPath:null,clipPathUnits:null,clipRule:null,color:null,colorInterpolation:null,colorInterpolationFilters:null,colorProfile:null,colorRendering:null,content:null,contentScriptType:null,contentStyleType:null,crossOrigin:null,cursor:null,cx:null,cy:null,d:null,dataType:null,defaultAction:null,descent:M,diffuseConstant:M,direction:null,display:null,dur:null,divisor:M,dominantBaseline:null,download:A,dx:null,dy:null,edgeMode:null,editable:null,elevation:M,enableBackground:null,end:null,event:null,exponent:M,externalResourcesRequired:null,fill:null,fillOpacity:M,fillRule:null,filter:null,filterRes:null,filterUnits:null,floodColor:null,floodOpacity:null,focusable:null,focusHighlight:null,fontFamily:null,fontSize:null,fontSizeAdjust:null,fontStretch:null,fontStyle:null,fontVariant:null,fontWeight:null,format:null,fr:null,from:null,fx:null,fy:null,g1:ct,g2:ct,glyphName:ct,glyphOrientationHorizontal:null,glyphOrientationVertical:null,glyphRef:null,gradientTransform:null,gradientUnits:null,handler:null,hanging:M,hatchContentUnits:null,hatchUnits:null,height:null,href:null,hrefLang:null,horizAdvX:M,horizOriginX:M,horizOriginY:M,id:null,ideographic:M,imageRendering:null,initialVisibility:null,in:null,in2:null,intercept:M,k:M,k1:M,k2:M,k3:M,k4:M,kernelMatrix:P,kernelUnitLength:null,keyPoints:null,keySplines:null,keyTimes:null,kerning:null,lang:null,lengthAdjust:null,letterSpacing:null,lightingColor:null,limitingConeAngle:M,local:null,markerEnd:null,markerMid:null,markerStart:null,markerHeight:null,markerUnits:null,markerWidth:null,mask:null,maskContentUnits:null,maskType:null,maskUnits:null,mathematical:null,max:null,media:null,mediaCharacterEncoding:null,mediaContentEncodings:null,mediaSize:M,mediaTime:null,method:null,min:null,mode:null,name:null,navDown:null,navDownLeft:null,navDownRight:null,navLeft:null,navNext:null,navPrev:null,navRight:null,navUp:null,navUpLeft:null,navUpRight:null,numOctaves:null,observer:null,offset:null,onAbort:null,onActivate:null,onAfterPrint:null,onBeforePrint:null,onBegin:null,onCancel:null,onCanPlay:null,onCanPlayThrough:null,onChange:null,onClick:null,onClose:null,onCopy:null,onCueChange:null,onCut:null,onDblClick:null,onDrag:null,onDragEnd:null,onDragEnter:null,onDragExit:null,onDragLeave:null,onDragOver:null,onDragStart:null,onDrop:null,onDurationChange:null,onEmptied:null,onEnd:null,onEnded:null,onError:null,onFocus:null,onFocusIn:null,onFocusOut:null,onHashChange:null,onInput:null,onInvalid:null,onKeyDown:null,onKeyPress:null,onKeyUp:null,onLoad:null,onLoadedData:null,onLoadedMetadata:null,onLoadStart:null,onMessage:null,onMouseDown:null,onMouseEnter:null,onMouseLeave:null,onMouseMove:null,onMouseOut:null,onMouseOver:null,onMouseUp:null,onMouseWheel:null,onOffline:null,onOnline:null,onPageHide:null,onPageShow:null,onPaste:null,onPause:null,onPlay:null,onPlaying:null,onPopState:null,onProgress:null,onRateChange:null,onRepeat:null,onReset:null,onResize:null,onScroll:null,onSeeked:null,onSeeking:null,onSelect:null,onShow:null,onStalled:null,onStorage:null,onSubmit:null,onSuspend:null,onTimeUpdate:null,onToggle:null,onUnload:null,onVolumeChange:null,onWaiting:null,onZoom:null,opacity:null,operator:null,order:null,orient:null,orientation:null,origin:null,overflow:null,overlay:null,overlinePosition:M,overlineThickness:M,paintOrder:null,panose1:null,path:null,pathLength:M,patternContentUnits:null,patternTransform:null,patternUnits:null,phase:null,ping:N,pitch:null,playbackOrder:null,pointerEvents:null,points:null,pointsAtX:M,pointsAtY:M,pointsAtZ:M,preserveAlpha:null,preserveAspectRatio:null,primitiveUnits:null,propagate:null,property:P,r:null,radius:null,referrerPolicy:null,refX:null,refY:null,rel:P,rev:P,renderingIntent:null,repeatCount:null,repeatDur:null,requiredExtensions:P,requiredFeatures:P,requiredFonts:P,requiredFormats:P,resource:null,restart:null,result:null,rotate:null,rx:null,ry:null,scale:null,seed:null,shapeRendering:null,side:null,slope:null,snapshotTime:null,specularConstant:M,specularExponent:M,spreadMethod:null,spacing:null,startOffset:null,stdDeviation:null,stemh:null,stemv:null,stitchTiles:null,stopColor:null,stopOpacity:null,strikethroughPosition:M,strikethroughThickness:M,string:null,stroke:null,strokeDashArray:P,strokeDashOffset:null,strokeLineCap:null,strokeLineJoin:null,strokeMiterLimit:M,strokeOpacity:M,strokeWidth:null,style:null,surfaceScale:M,syncBehavior:null,syncBehaviorDefault:null,syncMaster:null,syncTolerance:null,syncToleranceDefault:null,systemLanguage:P,tabIndex:M,tableValues:null,target:null,targetX:M,targetY:M,textAnchor:null,textDecoration:null,textRendering:null,textLength:null,timelineBegin:null,title:null,transformBehavior:null,type:null,typeOf:P,to:null,transform:null,transformOrigin:null,u1:null,u2:null,underlinePosition:M,underlineThickness:M,unicode:null,unicodeBidi:null,unicodeRange:null,unitsPerEm:M,values:null,vAlphabetic:M,vMathematical:M,vectorEffect:null,vHanging:M,vIdeographic:M,version:null,vertAdvY:M,vertOriginX:M,vertOriginY:M,viewBox:null,viewTarget:null,visibility:null,width:null,widths:null,wordSpacing:null,writingMode:null,x:null,x1:null,x2:null,xChannelSelector:null,xHeight:M,y:null,y1:null,y2:null,yChannelSelector:null,z:null,zoomAndPan:null},space:`svg`,transform:ht}),yt=pt({properties:{xLinkActuate:null,xLinkArcRole:null,xLinkHref:null,xLinkRole:null,xLinkShow:null,xLinkTitle:null,xLinkType:null},space:`xlink`,transform(e,t){return`xlink:`+t.slice(5).toLowerCase()}}),bt=pt({attributes:{xmlnsxlink:`xmlns:xlink`},properties:{xmlnsXLink:null,xmlns:null},space:`xmlns`,transform:gt}),xt=pt({properties:{xmlBase:null,xmlLang:null,xmlSpace:null},space:`xml`,transform(e,t){return`xml:`+t.slice(3).toLowerCase()}}),St=/[A-Z]/g,Ct=/-[a-z]/g,wt=/^data[-\w.:]+$/i;function Tt(e,t){let n=it(t),r=t,i=k;if(n in e.normal)return e.property[e.normal[n]];if(n.length>4&&n.slice(0,4)===`data`&&wt.test(t)){if(t.charAt(4)===`-`){let e=t.slice(5).replace(Ct,Dt);r=`data`+e.charAt(0).toUpperCase()+e.slice(1)}else{let e=t.slice(4);if(!Ct.test(e)){let n=e.replace(St,Et);n.charAt(0)!==`-`&&(n=`-`+n),t=`data`+n}}i=dt}return new i(r,t)}function Et(e){return`-`+e.toLowerCase()}function Dt(e){return e.charAt(1).toUpperCase()}var Ot=rt([mt,_t,yt,bt,xt],`html`),kt=rt([mt,vt,yt,bt,xt],`svg`),At={}.hasOwnProperty;function jt(e,t){let n=t||{};function r(t,...n){let i=r.invalid,a=r.handlers;if(t&&At.call(t,e)){let n=String(t[e]);i=At.call(a,n)?a[n]:r.unknown}if(i)return i.call(this,t,...n)}return r.handlers=n.handlers||{},r.invalid=n.invalid,r.unknown=n.unknown,r}var Mt=/["&'<>`]/g,Nt=/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,Pt=/[\x01-\t\v\f\x0E-\x1F\x7F\x81\x8D\x8F\x90\x9D\xA0-\uFFFF]/g,Ft=/[|\\{}()[\]^$+*?.]/g,It=new WeakMap;function Lt(e,t){return e=e.replace(t.subset?Rt(t.subset):Mt,r),t.subset||t.escapeOnly?e:e.replace(Nt,n).replace(Pt,r);function n(e,n,r){return t.format((e.charCodeAt(0)-55296)*1024+e.charCodeAt(1)-56320+65536,r.charCodeAt(n+2),t)}function r(e,n,r){return t.format(e.charCodeAt(0),r.charCodeAt(n+1),t)}}function Rt(e){let t=It.get(e);return t||(t=zt(e),It.set(e,t)),t}function zt(e){let t=[],n=-1;for(;++n<e.length;)t.push(e[n].replace(Ft,`\\$&`));return RegExp(`(?:`+t.join(`|`)+`)`,`g`)}var Bt=/[\dA-Fa-f]/;function Vt(e,t,n){let r=`&#x`+e.toString(16).toUpperCase();return n&&t&&!Bt.test(String.fromCharCode(t))?r:r+`;`}var Ht=/\d/;function Ut(e,t,n){let r=`&#`+String(e);return n&&t&&!Ht.test(String.fromCharCode(t))?r:r+`;`}var Wt=`AElig.AMP.Aacute.Acirc.Agrave.Aring.Atilde.Auml.COPY.Ccedil.ETH.Eacute.Ecirc.Egrave.Euml.GT.Iacute.Icirc.Igrave.Iuml.LT.Ntilde.Oacute.Ocirc.Ograve.Oslash.Otilde.Ouml.QUOT.REG.THORN.Uacute.Ucirc.Ugrave.Uuml.Yacute.aacute.acirc.acute.aelig.agrave.amp.aring.atilde.auml.brvbar.ccedil.cedil.cent.copy.curren.deg.divide.eacute.ecirc.egrave.eth.euml.frac12.frac14.frac34.gt.iacute.icirc.iexcl.igrave.iquest.iuml.laquo.lt.macr.micro.middot.nbsp.not.ntilde.oacute.ocirc.ograve.ordf.ordm.oslash.otilde.ouml.para.plusmn.pound.quot.raquo.reg.sect.shy.sup1.sup2.sup3.szlig.thorn.times.uacute.ucirc.ugrave.uml.uuml.yacute.yen.yuml`.split(`.`),Gt={nbsp:`\xA0`,iexcl:`¡`,cent:`¢`,pound:`£`,curren:`¤`,yen:`¥`,brvbar:`¦`,sect:`§`,uml:`¨`,copy:`©`,ordf:`ª`,laquo:`«`,not:`¬`,shy:`­`,reg:`®`,macr:`¯`,deg:`°`,plusmn:`±`,sup2:`²`,sup3:`³`,acute:`´`,micro:`µ`,para:`¶`,middot:`·`,cedil:`¸`,sup1:`¹`,ordm:`º`,raquo:`»`,frac14:`¼`,frac12:`½`,frac34:`¾`,iquest:`¿`,Agrave:`À`,Aacute:`Á`,Acirc:`Â`,Atilde:`Ã`,Auml:`Ä`,Aring:`Å`,AElig:`Æ`,Ccedil:`Ç`,Egrave:`È`,Eacute:`É`,Ecirc:`Ê`,Euml:`Ë`,Igrave:`Ì`,Iacute:`Í`,Icirc:`Î`,Iuml:`Ï`,ETH:`Ð`,Ntilde:`Ñ`,Ograve:`Ò`,Oacute:`Ó`,Ocirc:`Ô`,Otilde:`Õ`,Ouml:`Ö`,times:`×`,Oslash:`Ø`,Ugrave:`Ù`,Uacute:`Ú`,Ucirc:`Û`,Uuml:`Ü`,Yacute:`Ý`,THORN:`Þ`,szlig:`ß`,agrave:`à`,aacute:`á`,acirc:`â`,atilde:`ã`,auml:`ä`,aring:`å`,aelig:`æ`,ccedil:`ç`,egrave:`è`,eacute:`é`,ecirc:`ê`,euml:`ë`,igrave:`ì`,iacute:`í`,icirc:`î`,iuml:`ï`,eth:`ð`,ntilde:`ñ`,ograve:`ò`,oacute:`ó`,ocirc:`ô`,otilde:`õ`,ouml:`ö`,divide:`÷`,oslash:`ø`,ugrave:`ù`,uacute:`ú`,ucirc:`û`,uuml:`ü`,yacute:`ý`,thorn:`þ`,yuml:`ÿ`,fnof:`ƒ`,Alpha:`Α`,Beta:`Β`,Gamma:`Γ`,Delta:`Δ`,Epsilon:`Ε`,Zeta:`Ζ`,Eta:`Η`,Theta:`Θ`,Iota:`Ι`,Kappa:`Κ`,Lambda:`Λ`,Mu:`Μ`,Nu:`Ν`,Xi:`Ξ`,Omicron:`Ο`,Pi:`Π`,Rho:`Ρ`,Sigma:`Σ`,Tau:`Τ`,Upsilon:`Υ`,Phi:`Φ`,Chi:`Χ`,Psi:`Ψ`,Omega:`Ω`,alpha:`α`,beta:`β`,gamma:`γ`,delta:`δ`,epsilon:`ε`,zeta:`ζ`,eta:`η`,theta:`θ`,iota:`ι`,kappa:`κ`,lambda:`λ`,mu:`μ`,nu:`ν`,xi:`ξ`,omicron:`ο`,pi:`π`,rho:`ρ`,sigmaf:`ς`,sigma:`σ`,tau:`τ`,upsilon:`υ`,phi:`φ`,chi:`χ`,psi:`ψ`,omega:`ω`,thetasym:`ϑ`,upsih:`ϒ`,piv:`ϖ`,bull:`•`,hellip:`…`,prime:`′`,Prime:`″`,oline:`‾`,frasl:`⁄`,weierp:`℘`,image:`ℑ`,real:`ℜ`,trade:`™`,alefsym:`ℵ`,larr:`←`,uarr:`↑`,rarr:`→`,darr:`↓`,harr:`↔`,crarr:`↵`,lArr:`⇐`,uArr:`⇑`,rArr:`⇒`,dArr:`⇓`,hArr:`⇔`,forall:`∀`,part:`∂`,exist:`∃`,empty:`∅`,nabla:`∇`,isin:`∈`,notin:`∉`,ni:`∋`,prod:`∏`,sum:`∑`,minus:`−`,lowast:`∗`,radic:`√`,prop:`∝`,infin:`∞`,ang:`∠`,and:`∧`,or:`∨`,cap:`∩`,cup:`∪`,int:`∫`,there4:`∴`,sim:`∼`,cong:`≅`,asymp:`≈`,ne:`≠`,equiv:`≡`,le:`≤`,ge:`≥`,sub:`⊂`,sup:`⊃`,nsub:`⊄`,sube:`⊆`,supe:`⊇`,oplus:`⊕`,otimes:`⊗`,perp:`⊥`,sdot:`⋅`,lceil:`⌈`,rceil:`⌉`,lfloor:`⌊`,rfloor:`⌋`,lang:`〈`,rang:`〉`,loz:`◊`,spades:`♠`,clubs:`♣`,hearts:`♥`,diams:`♦`,quot:`"`,amp:`&`,lt:`<`,gt:`>`,OElig:`Œ`,oelig:`œ`,Scaron:`Š`,scaron:`š`,Yuml:`Ÿ`,circ:`ˆ`,tilde:`˜`,ensp:` `,emsp:` `,thinsp:` `,zwnj:`‌`,zwj:`‍`,lrm:`‎`,rlm:`‏`,ndash:`–`,mdash:`—`,lsquo:`‘`,rsquo:`’`,sbquo:`‚`,ldquo:`“`,rdquo:`”`,bdquo:`„`,dagger:`†`,Dagger:`‡`,permil:`‰`,lsaquo:`‹`,rsaquo:`›`,euro:`€`},Kt=[`cent`,`copy`,`divide`,`gt`,`lt`,`not`,`para`,`times`],qt={}.hasOwnProperty,Jt={},Yt;for(Yt in Gt)qt.call(Gt,Yt)&&(Jt[Gt[Yt]]=Yt);var Xt=/[^\dA-Za-z]/;function Zt(e,t,n,r){let i=String.fromCharCode(e);if(qt.call(Jt,i)){let e=Jt[i],a=`&`+e;return n&&Wt.includes(e)&&!Kt.includes(e)&&(!r||t&&t!==61&&Xt.test(String.fromCharCode(t)))?a:a+`;`}return``}function Qt(e,t,n){let r=Vt(e,t,n.omitOptionalSemicolons),i;if((n.useNamedReferences||n.useShortestReferences)&&(i=Zt(e,t,n.omitOptionalSemicolons,n.attribute)),(n.useShortestReferences||!i)&&n.useShortestReferences){let i=Ut(e,t,n.omitOptionalSemicolons);i.length<r.length&&(r=i)}return i&&(!n.useShortestReferences||i.length<r.length)?i:r}function $t(e,t){return Lt(e,Object.assign({format:Qt},t))}var en=/^>|^->|<!--|-->|--!>|<!-$/g,tn=[`>`],nn=[`<`,`>`];function rn(e,t,n,r){return r.settings.bogusComments?`<?`+$t(e.value,Object.assign({},r.settings.characterReferences,{subset:tn}))+`>`:`<!--`+e.value.replace(en,i)+`-->`;function i(e){return $t(e,Object.assign({},r.settings.characterReferences,{subset:nn}))}}function an(e,t,n,r){return`<!`+(r.settings.upperDoctype?`DOCTYPE`:`doctype`)+(r.settings.tightDoctype?``:` `)+`html>`}function on(e,t){let n=String(e);if(typeof t!=`string`)throw TypeError(`Expected character`);let r=0,i=n.indexOf(t);for(;i!==-1;)r++,i=n.indexOf(t,i+t.length);return r}function sn(e,t){let n=t||{};return(e[e.length-1]===``?[...e,``]:e).join((n.padRight?` `:``)+`,`+(n.padLeft===!1?``:` `)).trim()}function cn(e){return e.join(` `).trim()}var ln=/[ \t\n\f\r]/g;function un(e){return typeof e==`object`?e.type===`text`&&dn(e.value):dn(e)}function dn(e){return e.replace(ln,``)===``}var F=mn(1),fn=mn(-1),pn=[];function mn(e){return t;function t(t,n,r){let i=t?t.children:pn,a=(n||0)+e,o=i[a];if(!r)for(;o&&un(o);)a+=e,o=i[a];return o}}var hn={}.hasOwnProperty;function gn(e){return t;function t(t,n,r){return hn.call(e,t.tagName)&&e[t.tagName](t,n,r)}}var _n=gn({body:bn,caption:vn,colgroup:vn,dd:wn,dt:Cn,head:vn,html:yn,li:Sn,optgroup:En,option:Dn,p:xn,rp:Tn,rt:Tn,tbody:kn,td:Mn,tfoot:An,th:Mn,thead:On,tr:jn});function vn(e,t,n){let r=F(n,t,!0);return!r||r.type!==`comment`&&!(r.type===`text`&&un(r.value.charAt(0)))}function yn(e,t,n){let r=F(n,t);return!r||r.type!==`comment`}function bn(e,t,n){let r=F(n,t);return!r||r.type!==`comment`}function xn(e,t,n){let r=F(n,t);return r?r.type===`element`&&(r.tagName===`address`||r.tagName===`article`||r.tagName===`aside`||r.tagName===`blockquote`||r.tagName===`details`||r.tagName===`div`||r.tagName===`dl`||r.tagName===`fieldset`||r.tagName===`figcaption`||r.tagName===`figure`||r.tagName===`footer`||r.tagName===`form`||r.tagName===`h1`||r.tagName===`h2`||r.tagName===`h3`||r.tagName===`h4`||r.tagName===`h5`||r.tagName===`h6`||r.tagName===`header`||r.tagName===`hgroup`||r.tagName===`hr`||r.tagName===`main`||r.tagName===`menu`||r.tagName===`nav`||r.tagName===`ol`||r.tagName===`p`||r.tagName===`pre`||r.tagName===`section`||r.tagName===`table`||r.tagName===`ul`):!n||n.type!==`element`||n.tagName!==`a`&&n.tagName!==`audio`&&n.tagName!==`del`&&n.tagName!==`ins`&&n.tagName!==`map`&&n.tagName!==`noscript`&&n.tagName!==`video`}function Sn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`li`}function Cn(e,t,n){let r=F(n,t);return!(!r||r.type!==`element`||r.tagName!==`dt`&&r.tagName!==`dd`)}function wn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`dt`||r.tagName===`dd`)}function Tn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`rp`||r.tagName===`rt`)}function En(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`optgroup`}function Dn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`option`||r.tagName===`optgroup`)}function On(e,t,n){let r=F(n,t);return!(!r||r.type!==`element`||r.tagName!==`tbody`&&r.tagName!==`tfoot`)}function kn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`tbody`||r.tagName===`tfoot`)}function An(e,t,n){return!F(n,t)}function jn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&r.tagName===`tr`}function Mn(e,t,n){let r=F(n,t);return!r||r.type===`element`&&(r.tagName===`td`||r.tagName===`th`)}var Nn=gn({body:In,colgroup:Ln,head:Fn,html:Pn,tbody:Rn});function Pn(e){let t=F(e,-1);return!t||t.type!==`comment`}function Fn(e){let t=new Set;for(let n of e.children)if(n.type===`element`&&(n.tagName===`base`||n.tagName===`title`)){if(t.has(n.tagName))return!1;t.add(n.tagName)}let n=e.children[0];return!n||n.type===`element`}function In(e){let t=F(e,-1,!0);return!t||t.type!==`comment`&&!(t.type===`text`&&un(t.value.charAt(0)))&&(t.type!==`element`||t.tagName!==`meta`&&t.tagName!==`link`&&t.tagName!==`script`&&t.tagName!==`style`&&t.tagName!==`template`)}function Ln(e,t,n){let r=fn(n,t),i=F(e,-1,!0);return n&&r&&r.type===`element`&&r.tagName===`colgroup`&&_n(r,n.children.indexOf(r),n)?!1:!!(i&&i.type===`element`&&i.tagName===`col`)}function Rn(e,t,n){let r=fn(n,t),i=F(e,-1);return n&&r&&r.type===`element`&&(r.tagName===`thead`||r.tagName===`tbody`)&&_n(r,n.children.indexOf(r),n)?!1:!!(i&&i.type===`element`&&i.tagName===`tr`)}var zn={name:[[`	
 \f\r &/=>`.split(``),`	
 \f\r "&'/=>\``.split(``)],[`\0	
 \f\r "&'/<=>`.split(``),`\0	

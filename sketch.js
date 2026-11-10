@@ -114,7 +114,7 @@ const PARAM_GROUPS = [
     knobSet: 4,
     params: [
       // max is set to (number of palettes - 1) when the panel is built
-      { key: "palette", label: "palette morph", min: 0, max: 3, value: 0, step: 0.01 },
+      { key: "palette", label: "palette morph", min: 0, max: 3, value: 0, step: 0.01, smooth: 0.05 },
       // trails: see postfx.js
       { key: "trailDisplace", label: "trail displacement", min: 0, max: 0.05, value: 0.01, step: 0.0005 },
       { key: "trailBandFreq", label: "band frequency", min: 0, max: 60, value: 12, step: 0.5 },
