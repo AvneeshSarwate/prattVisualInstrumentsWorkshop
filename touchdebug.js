@@ -17,7 +17,7 @@
   document.addEventListener("DOMContentLoaded", () => document.body.append(readout));
 
   const fmt = (n) => (Math.round(n * 10) / 10).toString();
-  const line = (s, live) =>
+  const formatPress = (s, live) =>
     `${live ? "▶" : " "} ${s.type.padEnd(5)} ` +
     `w×h ${fmt(s.w)}×${fmt(s.h)}`.padEnd(18) +
     `peak ${fmt(s.peakW)}×${fmt(s.peakH)}`.padEnd(18) +
@@ -30,8 +30,8 @@
 
   function render() {
     if (!visible) return;
-    const lines = ["touch debug (D to hide)", ...[...active.values()].map((s) => line(s, true))];
-    if (history.length) lines.push("— last presses —", ...history.map((s) => line(s, false)));
+    const lines = ["touch debug (D to hide)", ...[...active.values()].map((s) => formatPress(s, true))];
+    if (history.length) lines.push("— last presses —", ...history.map((s) => formatPress(s, false)));
     readout.textContent = lines.join("\n");
   }
 

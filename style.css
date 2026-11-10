@@ -259,6 +259,11 @@ body.fullscreen .exit-fullscreen {
   gap: 8px;
   padding: 0 4px;
 }
+.palette-row.dragging {
+  background: #262634;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
 .palette-row .idx {
   width: 14px;
   color: var(--dim);

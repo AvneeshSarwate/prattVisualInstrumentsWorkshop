@@ -157,7 +157,7 @@ function buildRow(def, savedBase) {
   p.setBase(typeof savedBase === "number" ? savedBase : def.value, false);
   params[def.key] = p;
 
-  makeDraggable(row, handle);
+  makeDraggable(row, handle, (rows, done) => (done ? markDirty() : refreshRows(rows)));
   row.append(handle, badge, label, track, readout);
   return row;
 }
@@ -182,12 +182,14 @@ const middleY = (node) => {
   return r.top + r.height / 2;
 };
 
-function makeDraggable(row, handle) {
+// Used by slider rows and palette rows. onChange(list, done) is called whenever the row moves
+// (done = false) and once at the end if the order actually changed (done = true).
+function makeDraggable(row, handle, onChange) {
   handle.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     handle.setPointerCapture(e.pointerId);
-    const rows = row.parentElement;
-    const before = keysOf(rows).join();
+    const list = row.parentElement;
+    const before = [...list.children];
     row.classList.add("dragging");
 
     const stop = new AbortController();
@@ -195,10 +197,10 @@ function makeDraggable(row, handle) {
       "pointermove",
       (e) => {
         // put the row in front of the first other row whose middle is below the pointer
-        const next = [...rows.children].find((r) => r !== row && e.clientY < middleY(r)) ?? null;
+        const next = [...list.children].find((r) => r !== row && e.clientY < middleY(r)) ?? null;
         if (next !== row.nextElementSibling) {
-          rows.insertBefore(row, next);
-          refreshRows(rows);
+          list.insertBefore(row, next);
+          onChange(list, false);
         }
       },
       { signal: stop.signal }
@@ -206,7 +208,7 @@ function makeDraggable(row, handle) {
     const end = () => {
       stop.abort();
       row.classList.remove("dragging");
-      if (keysOf(rows).join() !== before) markDirty();
+      if ([...list.children].some((r, i) => r !== before[i])) onChange(list, true);
     };
     handle.addEventListener("pointerup", end, { signal: stop.signal });
     handle.addEventListener("pointercancel", end, { signal: stop.signal });
@@ -308,7 +310,15 @@ function renderPalettes() {
 
 function paletteRow(pal, i) {
   const row = el("div", "palette-row");
-  row.append(el("span", "idx", String(i)));
+  row.palette = pal; // so a drag can rebuild the palette order from the rows
+  const handle = el("span", "handle", "⋮⋮");
+  handle.title = "drag to reorder";
+  makeDraggable(row, handle, (list, done) => {
+    // while dragging, just renumber; on drop, reorder the palettes themselves
+    [...list.children].forEach((r, j) => (r.querySelector(".idx").textContent = String(j)));
+    if (done) palettesReordered([...list.children].map((r) => r.palette));
+  });
+  row.append(handle, el("span", "idx", String(i)));
 
   for (const role of ["bg", "light", "heavy"]) {
     const swatch = el("label", "swatch");
@@ -350,6 +360,15 @@ function paletteRow(pal, i) {
     row.append(btn);
   }
   return row;
+}
+
+// If palette morph sits exactly on a palette, it follows that palette to its new position.
+function palettesReordered(newOrder) {
+  const morph = params.palette;
+  const shown = Number.isInteger(morph.base) ? palettes[morph.base] : null;
+  palettes.splice(0, palettes.length, ...newOrder);
+  if (shown) morph.setBase(palettes.indexOf(shown));
+  palettesChanged();
 }
 
 function palettesChanged() {
