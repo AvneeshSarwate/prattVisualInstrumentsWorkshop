@@ -19,6 +19,9 @@ const KNOBS_PER_SET = 4;
 const KNOB_COUNT = 16;
 const KNOB_TICKS_FULL_RANGE = 100; // knob ticks to sweep a slider end to end — lower = more sensitive
 const AUTOSAVE_MS = 5000;
+// Saving needs the dev server (npm run dev), which only listens on this machine.
+// On the deployed static site (GitHub Pages) changes just last until reload.
+const CAN_SAVE = ["localhost", "127.0.0.1"].includes(location.hostname);
 
 // key -> { def, base, live, setBase(v), setLive(v), ... }. param(key) is what the sketch calls.
 // For params with `smooth` set, it returns the smoothed value (see Smoothing below).
@@ -431,7 +434,7 @@ function configSnapshot() {
 
 async function loadConfig() {
   try {
-    const res = await fetch("/config.json", { cache: "no-store" });
+    const res = await fetch("config.json", { cache: "no-store" }); // relative: works under a Pages subpath
     return res.ok ? await res.json() : {};
   } catch {
     return {};
@@ -456,6 +459,7 @@ async function saveToServer() {
 }
 
 function setupAutosave() {
+  if (!CAN_SAVE) return;
   setInterval(() => dirty && saveToServer(), AUTOSAVE_MS);
   // closing or reloading the page: send any unsaved changes right away
   window.addEventListener("pagehide", () => {

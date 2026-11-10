@@ -2,6 +2,7 @@
   "name": "pratt-visual-instruments-workshop",
   "private": true,
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build:docs": "node scripts/build-docs.mjs"
   }
 }
