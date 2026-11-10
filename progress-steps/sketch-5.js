@@ -10,6 +10,7 @@ function draw() {
   noFill();
   stroke(255);
   updateAllCircles();
+  cleanUpAllCircles();
   for (let i = 0; i < circles.length; i++) {
     circle(circles[i].x, circles[i].y, 200);
   }
@@ -36,10 +37,9 @@ function updateAllCircles() {
   for (let i = 0; i < circles.length; i++) {
     updateCircle(circles[i]);
   }
-  cleanUpCircles();
 }
 
-function cleanUpCircles() {
+function cleanUpAllCircles() {
   let onScreenCircles = [];
   for (let i = 0; i < circles.length; i++) {
     if (!isOffScreen(circles[i])) {
