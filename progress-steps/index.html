@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Progress Steps</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@2.3.4/lib/p5.js"></script>
+    <style>
+      html, body { margin: 0; padding: 0; background: #111; color: #ddd; font-family: sans-serif; }
+      canvas { display: block; }
+      #msg { padding: 16px; }
+    </style>
+  </head>
+  <body>
+    <div id="msg"></div>
+    <script>
+      // Load the sketch named by the query string: index.html?sketch-1 -> sketch-1.js
+      const name = decodeURIComponent(location.search.slice(1));
+      const msg = document.getElementById("msg");
+      if (!/^[\w-]+$/.test(name)) {
+        msg.textContent = "Add a sketch name to the URL, e.g. ?sketch-1";
+      } else {
+        document.title = name;
+        const s = document.createElement("script");
+        s.src = name + ".js";
+        s.onerror = () => (msg.textContent = `Couldn't load ${name}.js`);
+        // Dynamically added scripts delay window "load", so p5 global mode
+        // still finds setup()/draw() when it starts.
+        document.body.appendChild(s);
+      }
+    </script>
+  </body>
+</html>

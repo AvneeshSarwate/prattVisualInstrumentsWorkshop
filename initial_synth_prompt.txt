@@ -1,0 +1,76 @@
+Munus Pratt workshop 
+
+
+
+Perform visuals to Claire de lune using only moving circles 
+
+
+
+I want to create an interactive p5 js sketch - it should launch the following gestures on mouse/pointer clicks
+
+Different composable layers/gestures
+- Randomized fireworks 
+    - Burst of randomized circles that fall together 
+    - Arc is normal parabola as function of time model with randomized launch angle and velocity 
+    - Slight variation in circle size 
+    - param - base launch velocity
+    - Param - circle size 
+    - Triggered by click/pointer in center third of canvas
+- Circles all rotating around  center
+    - Param - fade in time - combo orbit radius + individual circle size (start at half radius and expand to full radius
+    - Param - ration speed 
+    - param - lerp circle loop vs noise loop 
+    - Triggered by click/pointer in center third of canvas
+- Rising bloom circles
+    - Start small, wobble as they rise up - grow and then fade alpha (drawn under fireworks circles in terms of screen draw order)
+    - Triggered by click/pointer in lower third of canvas 
+    - X axis wobble is based on noise function of time + Y 
+    - Param - Y axis speed is polynomial (eg accelerates over time) 
+
+
+It should also have set of palettes that are lerpable with a single parameter - 2 color palette 
+
+- pallete 
+    - General palette of background vs circles
+    - Param - Can have multiple palettes on a knob and morph thru them 
+    - Param - Can have some slight noise on the foreground colors so circles are differentiable 
+
+1280x720 canvas
+
+the things marked as param should be controllable by sliders below the canvas 
+
+the gestures should be defined as functions of time - multiple can overlap they should behave almost like coroutines with the pattern:
+
+fireWorks = new Map() //some array that holds the structs of the fireworks that get drawn in the draw loop
+
+
+const nextFrame = () => new Promise(requestAnimationFrame);
+
+async launchFireworks() {
+    //snapshot params of the gesture
+    
+    startTIme = date.now()
+    let phase = 0
+    let intervalId = 0
+
+    const fireworkData = {}
+
+    const fireworkId = crypo.UUID()
+
+    while(phase < 1) {
+        phase = (date.now() - startTime) / duration
+
+        //animate as a function of phase - set fireworks data for the fireworkId key in the map
+
+    }
+}
+
+
+draw() {
+
+    //loop over values in fireworks map, and draw
+
+}
+
+
+this makes

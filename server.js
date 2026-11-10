@@ -39,7 +39,7 @@ function serveFile(pathname, res) {
     res.writeHead(200, { "Content-Type": TYPES[".json"] }).end("{}");
     return;
   }
-  const file = path.join(ROOT, pathname === "/" ? "index.html" : pathname);
+  const file = path.join(ROOT, pathname.endsWith("/") ? pathname + "index.html" : pathname);
   if (!file.startsWith(ROOT + path.sep)) {
     res.writeHead(403).end();
     return;
