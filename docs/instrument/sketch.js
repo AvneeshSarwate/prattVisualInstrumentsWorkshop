@@ -6,8 +6,8 @@
 //   bottom third -> rising bloom circle from the press point
 //
 // Dragging before you release "throws" the gesture (see the Throw section):
-//   fireworks -> the burst leans in the drag direction
-//   orbit     -> the whole ring glides off in the drag direction
+//   fireworks -> the burst shoots in the drag direction: narrower and faster the longer the drag
+//   orbit     -> the whole ring glides off in the drag direction; a left throw spins it the other way
 //   bloom     -> the circle drifts sideways as it rises
 //
 // Each gesture is an async "coroutine": it snapshots the slider values,
@@ -32,6 +32,12 @@ let H = 720;
 //   set 1 = knobs 1-4, set 2 = knobs 5-8, set 3 = knobs 9-12, set 4 = knobs 13-16.
 // Drag a slider by its ⋮⋮ handle to change which ones are on the knobs.
 // With `npm run dev` the new order is saved to config.json.
+//
+// Optional per-parameter settings:
+//   curve: 2      slider/knob response — the value is min + range × position^curve.
+//                 > 1 = finer at the low end, < 1 = finer at the high end. Default 1 (linear).
+//   smooth: 0.05  ease the value toward the slider/knob over time (seconds — the time constant),
+//                 so knob steps don't show as jumps. Only useful for values read every frame.
 
 const PARAM_GROUPS = [
   {
@@ -41,11 +47,16 @@ const PARAM_GROUPS = [
     params: [
       { key: "fwVelocity", label: "launch velocity", min: 40, max: 900, value: 150, step: 10 },
       { key: "fwSize", label: "circle size", min: 2, max: 40, value: 10, step: 1 },
-      { key: "fwCount", label: "particles", min: 1, max: 40, value: 8, step: 1 },
+      // curve 2: the low end of the slider/knob is finer (4 → 8 particles is a big change, 30 → 34 isn't)
+      { key: "fwCount", label: "particles", min: 1, max: 40, value: 8, step: 1, curve: 2 },
       { key: "fwSpread", label: "fan spread ±°", min: 0, max: 180, value: 63, step: 1 },
       { key: "fwGravity", label: "gravity", min: 0, max: 1500, value: 300, step: 10 },
+      // scales velocity AND gravity together: bigger, faster arcs with the same timing (see launchFireworks)
+      { key: "fwDrama", label: "drama (×2 per unit)", min: -2, max: 2, value: 0, step: 0.01 },
       { key: "fwDuration", label: "lifetime (s)", min: 0.5, max: 10, value: 3, step: 0.1 },
-      { key: "fwTilt", label: "throw tilt °", min: 0, max: 90, value: 50, step: 1 },
+      { key: "fwThrowAim", label: "throw aim", min: 0, max: 1, value: 1, step: 0.01 },
+      { key: "fwThrowFocus", label: "throw focus", min: 0, max: 1, value: 0.7, step: 0.01 },
+      { key: "fwThrowBoost", label: "throw boost ×", min: 0, max: 3, value: 1, step: 0.05 },
       { key: "fwSpeedMin", label: "speed min ×", min: 0, max: 2, value: 0.5, step: 0.05 },
       { key: "fwSpeedMax", label: "speed max ×", min: 0, max: 2, value: 1.2, step: 0.05 },
       { key: "fwSizeJitter", label: "size variation ±", min: 0, max: 1, value: 0.2, step: 0.01 },
@@ -56,22 +67,26 @@ const PARAM_GROUPS = [
     title: "Orbit — middle third",
     knobSet: 2,
     params: [
-      { key: "orbitFadeIn", label: "fade in (s)", min: 0.1, max: 8, value: 2, step: 0.1 },
+      // attack/decay envelope: the ring opens over the attack, then closes back down over the decay
+      { key: "orbitFadeIn", label: "attack (s)", min: 0.1, max: 8, value: 2, step: 0.1 },
+      { key: "orbitDecay", label: "decay (s)", min: 0.1, max: 20, value: 6, step: 0.1 },
+      // envelope corners (fraction of the attack/decay spent speeding up or slowing down; the rest is linear)
+      { key: "orbitEaseStart", label: "ease at start", min: 0, max: 0.5, value: 0.08, step: 0.01 },
+      { key: "orbitEasePeak", label: "ease at peak", min: 0, max: 0.5, value: 0.12, step: 0.01 },
       { key: "orbitSpeed", label: "rotation speed", min: -3, max: 3, value: 0.6, step: 0.05 },
-      { key: "orbitNoise", label: "circle ↔ noise", min: 0, max: 1, value: 0, step: 0.01 },
+      { key: "orbitNoise", label: "circle ↔ noise", min: 0, max: 1, value: 0, step: 0.01, smooth: 0.05 },
       { key: "orbitRadius", label: "radius", min: 20, max: 400, value: 160, step: 1 },
       { key: "orbitCount", label: "circles", min: 1, max: 80, value: 24, step: 1 },
       { key: "orbitSize", label: "circle size", min: 2, max: 80, value: 22, step: 1 },
-      { key: "orbitHold", label: "hold (s)", min: 0, max: 20, value: 6, step: 0.1 },
-      { key: "orbitFadeOut", label: "fade out (s)", min: 0.1, max: 10, value: 2, step: 0.1 },
       { key: "orbitStartRadius", label: "start radius ×", min: 0, max: 1, value: 0.5, step: 0.01 },
       { key: "orbitSpeedJitter", label: "speed variation ±", min: 0, max: 1, value: 0.25, step: 0.01 },
       { key: "orbitThrowSpeed", label: "throw speed", min: 0, max: 3000, value: 900, step: 10 },
       { key: "orbitFriction", label: "throw friction", min: 0.1, max: 6, value: 1.5, step: 0.1 },
-      { key: "orbitWarpAmount", label: "warp amount ×r", min: 0, max: 6, value: 3, step: 0.1 },
-      { key: "orbitWarpFreq", label: "warp frequency", min: 0.1, max: 3, value: 0.6, step: 0.05 },
-      { key: "orbitWarpFold", label: "warp swirl", min: 0, max: 5, value: 1.5, step: 0.1 },
-      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 0.1, value: 0.007, step: 0.001 },
+      // curve 0.75: small warp amounts all look alike, so the low end goes by faster
+      { key: "orbitWarpAmount", label: "warp amount ×r", min: 0, max: 6, value: 3, step: 0.01, curve: 0.75, smooth: 0.05 },
+      { key: "orbitWarpFreq", label: "warp frequency", min: 0.1, max: 3, value: 0.6, step: 0.05, smooth: 0.05 },
+      { key: "orbitWarpFold", label: "warp swirl", min: 0, max: 5, value: 1.5, step: 0.1, smooth: 0.05 },
+      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 1, value: 0.007, step: 0.001, smooth: 0.05 },
     ],
   },
   {
@@ -82,7 +97,8 @@ const PARAM_GROUPS = [
       { key: "bloomPower", label: "rise acceleration", min: 1, max: 4, value: 2, step: 0.1 },
       { key: "bloomDuration", label: "rise time (s)", min: 0.5, max: 15, value: 5, step: 0.1 },
       { key: "bloomWobble", label: "wobble (px)", min: 0, max: 400, value: 120, step: 1 },
-      { key: "bloomLean", label: "throw lean (px)", min: 0, max: 800, value: 300, step: 10 },
+      { key: "bloomLean", label: "throw lean (px)", min: 0, max: 2000, value: 900, step: 10 },
+      { key: "bloomThrowRise", label: "throw rise speed", min: 0, max: 3, value: 1, step: 0.05 },
       { key: "bloomStartSize", label: "start size", min: 0, max: 80, value: 6, step: 1 },
       { key: "bloomEndSize", label: "end size", min: 2, max: 300, value: 80, step: 1 },
       { key: "bloomAlpha", label: "opacity", min: 0, max: 255, value: 200, step: 1 },
@@ -102,7 +118,7 @@ const PARAM_GROUPS = [
       // trails: see postfx.js
       { key: "trailDisplace", label: "trail displacement", min: 0, max: 0.05, value: 0.01, step: 0.0005 },
       { key: "trailBandFreq", label: "band frequency", min: 0, max: 60, value: 12, step: 0.5 },
-      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 10, value: 2, step: 0.05 },
+      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 2, value: 2, step: 0.001, curve: 1.5 },
       { key: "colorNoise", label: "color noise", min: 0, max: 80, value: 20, step: 1 },
       { key: "throwDrag", label: "full-throw drag (px)", min: 50, max: 1000, value: 300, step: 10 },
       { key: "heavyArea", label: "heavy touch area (px²)", min: 0, max: 15000, value: 8000, step: 50 },
@@ -202,24 +218,39 @@ function glide(speed, friction, seconds) {
 
 async function launchFireworks(x0, y0, throwVec, heavy) {
   // snapshot params for this gesture
-  const baseVelocity = param("fwVelocity"); // pixels per second
+  // Drama: multiply velocity and gravity by the same factor s. The peak height (v²/2g) grows by s,
+  // but the time to reach it (v/g) stays the same — so the burst goes higher and falls faster,
+  // in the same amount of time. drama 0 = ×1, +1 = ×2, +2 = ×4, -1 = ×½.
+  const drama = pow(2, param("fwDrama"));
+  const baseVelocity = param("fwVelocity") * drama; // pixels per second
   const baseSize = param("fwSize");
   const count = param("fwCount");
-  const spread = radians(param("fwSpread")); // half-width of the upward fan
+  const spread = radians(param("fwSpread")); // half-width of the fan (before the throw narrows it)
   const speedMin = param("fwSpeedMin");
   const speedMax = param("fwSpeedMax");
   const sizeJitter = param("fwSizeJitter");
   const duration = param("fwDuration") * 1000; // ms
-  const gravity = param("fwGravity"); // pixels per second^2 — shared, so they all fall together
+  const gravity = param("fwGravity") * drama; // pixels per second^2 — shared, so they all fall together
 
-  // throw: dragging sideways tilts the whole fan that way
-  const tilt = throwVec.x * radians(param("fwTilt"));
+  // throw: the harder the throw (strength 0..1), the more the burst
+  //   aim   — turns from straight up toward the drag direction (aim 1 = all the way)
+  //   focus — narrows the fan (focus 1 = a single line at full strength)
+  //   boost — launches faster (boost 1 = twice as fast at full strength)
+  const strength = sqrt(throwVec.x * throwVec.x + throwVec.y * throwVec.y);
+  const up = -HALF_PI; // screen y points down
+  let center = up;
+  if (strength > 0) {
+    const dragAngle = atan2(throwVec.y, throwVec.x);
+    const turn = atan2(sin(dragAngle - up), cos(dragAngle - up)); // shortest turn from up, -PI..PI
+    center = up + turn * strength * param("fwThrowAim");
+  }
+  const fan = spread * (1 - strength * param("fwThrowFocus"));
+  const boost = 1 + strength * param("fwThrowBoost");
 
   const particles = [];
   for (let i = 0; i < count; i++) {
-    // upward fan (screen y points down), centered on straight up plus the tilt
-    const angle = -HALF_PI + tilt + random(-spread, spread);
-    const speed = baseVelocity * random(speedMin, speedMax);
+    const angle = center + random(-fan, fan);
+    const speed = baseVelocity * boost * random(speedMin, speedMax);
     particles.push({
       vx: cos(angle) * speed,
       vy: sin(angle) * speed,
@@ -273,23 +304,37 @@ function domainWarp(x, y, t, seed, freq, fold) {
 
 // ---------- Gesture: orbit around the center ----------
 
+// One warp clock shared by all orbits. It advances by warp drift every frame (in draw()), so turning
+// the drift knob changes how fast the field moves without making it jump.
+let orbitWarpTime = 0;
+
+// Mostly-linear ease from 0 to 1 as u goes 0 to 1 (a "trapezoid" speed profile):
+// the speed ramps up over the first `easeIn` fraction, stays constant (plain linear motion)
+// through the middle, and ramps down to zero over the last `easeOut` fraction.
+// Small fractions = linear travel with just the corners rounded off.
+function linearEase(u, easeIn, easeOut) {
+  u = constrain(u, 0, 1);
+  const v = 1 / (1 - (easeIn + easeOut) / 2); // top speed, so the whole move covers exactly 0 -> 1
+  if (u < easeIn) return (v * u * u) / (2 * easeIn);
+  if (u > 1 - easeOut) return 1 - (v * (1 - u) * (1 - u)) / (2 * easeOut);
+  return v * (u - easeIn / 2);
+}
+
 async function launchOrbit(x0, y0, throwVec, heavy) {
-  const fadeIn = param("orbitFadeIn") * 1000; // ms
+  const attack = param("orbitFadeIn") * 1000; // ms
+  const decay = param("orbitDecay") * 1000; // ms
+  const duration = attack + decay;
+  const easeStart = param("orbitEaseStart"); // ease-in at the very start of the attack
+  const easePeak = param("orbitEasePeak"); // rounds off the turnaround between attack and decay
   const speedJitter = param("orbitSpeedJitter");
-  const speed = param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
-  const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
+  // throw direction picks the spin: a throw to the left reverses the rotation
+  const spin = throwVec.x < 0 ? -1 : 1;
+  const speed = spin * param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
   const count = param("orbitCount");
   const fullRadius = param("orbitRadius");
   const startRadius = param("orbitStartRadius"); // fraction of the full radius it grows from
   const fullSize = param("orbitSize");
-  const hold = param("orbitHold") * 1000; // ms
-  const fadeOut = param("orbitFadeOut") * 1000; // ms
-  const duration = fadeIn + hold + fadeOut;
-
-  const warpAmount = param("orbitWarpAmount") * fullRadius; // how far (pixels) the field can push a point
-  const warpFreq = param("orbitWarpFreq");
-  const warpFold = param("orbitWarpFold");
-  const warpDrift = param("orbitWarpDrift"); // how fast the warp field changes, per second
+  // (the warp parameters are global — read every frame below, so knobs affect orbits already on screen)
 
   // throw: the whole ring glides off in the drag direction and slows to a stop
   const throwSpeed = param("orbitThrowSpeed"); // pixels per second at full strength
@@ -311,29 +356,41 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
     const elapsed = performance.now() - startTime;
     phase = min(elapsed / duration, 1);
 
-    // fade in = orbit radius grows to full while circles grow from 0 to full size
-    const grow = 1 - pow(1 - constrain(elapsed / fadeIn, 0, 1), 3); // ease-out
-    const radius = fullRadius * lerp(startRadius, 1, grow);
-    const size = fullSize * grow;
-    const alpha = elapsed > fadeIn + hold ? 255 * (1 - (elapsed - fadeIn - hold) / fadeOut) : 255;
+    // attack/decay envelope, 0 -> 1 -> 0: the whole (warped) ring scales from start radius ->
+    // full -> start radius, and the circles grow from nothing to full size and back to nothing.
+    // Mostly linear: a slight ease-in at the start, and the peak rounded off on both sides so it
+    // turns around smoothly instead of bouncing. The decay ends linearly (the circles are gone by then).
+    const open =
+      elapsed < attack
+        ? linearEase(elapsed / attack, easeStart, easePeak)
+        : 1 - linearEase((elapsed - attack) / decay, easePeak, 0);
+    const scale = lerp(startRadius, 1, open); // how open the ring is, as a fraction of full size
+    const size = fullSize * open;
+    const alpha = 255;
     const rotation = startAngle + (speed * elapsed) / 1000;
 
     const seconds = elapsed / 1000;
     const cx = x0 + glide(vx, friction, seconds);
     const cy = y0 + glide(vy, friction, seconds);
 
-    const t = seconds * warpDrift; // slow drift of the warp field
+    // warp: global, live every frame (not snapshotted at launch)
+    const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
+    const warpAmount = param("orbitWarpAmount") * fullRadius; // how far (pixels) the field can push a point
+    const warpFreq = param("orbitWarpFreq");
+    const warpFold = param("orbitWarpFold");
+    const t = orbitWarpTime; // shared warp clock, advanced by warp drift in draw()
 
     data.circles = seeds.map((seed, i) => {
       const a = rotation + (i / count) * TWO_PI;
       // point on the plain circle, in units of the full radius
-      const ux = (cos(a) * radius) / fullRadius;
-      const uy = (sin(a) * radius) / fullRadius;
+      const ux = cos(a);
+      const uy = sin(a);
       // domain warp: push the point through a 2D noise field. The field is fixed in space,
       // so circles slide along one smooth warped loop as they rotate.
       const [wx, wy] = domainWarp(ux, uy, t, loopSeed, warpFreq, warpFold);
-      const x = cos(a) * radius + wx * warpAmount * noiseMix;
-      const y = sin(a) * radius + wy * warpAmount * noiseMix;
+      // the full-size warped ring, then scaled by the envelope — so the warp opens and closes with it
+      const x = (ux * fullRadius + wx * warpAmount * noiseMix) * scale;
+      const y = (uy * fullRadius + wy * warpAmount * noiseMix) * scale;
       return { x: cx + x, y: cy + y, d: size, alpha, seed };
     });
     await nextFrame();
@@ -345,7 +402,11 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
 
 async function launchBloom(x0, y0, throwVec, heavy) {
   const power = param("bloomPower"); // 1 = constant speed, >1 = accelerates
-  const duration = param("bloomDuration") * 1000; // ms
+
+  // throw, up/down: swiping up makes it rise faster, swiping down slower.
+  // At full strength with throw rise speed 1, an upward swipe halves the rise time.
+  const riseScale = pow(2, throwVec.y * param("bloomThrowRise")); // throwVec.y < 0 = up
+  const duration = param("bloomDuration") * 1000 * riseScale; // ms
   const travel = y0 + param("bloomOvershoot"); // rise until just past the top edge
   const wobble = param("bloomWobble"); // pixels
   const wobbleSpeed = param("bloomWobbleSpeed"); // noise steps per second
@@ -356,7 +417,7 @@ async function launchBloom(x0, y0, throwVec, heavy) {
   const fadeStart = param("bloomFadeStart"); // fraction of the rise when fading begins
   const seed = random(1000);
 
-  // throw: dragging sideways makes the circle drift that way as it rises
+  // throw, sideways: the circle drifts that way — fast right after release, then easing off
   const lean = throwVec.x * param("bloomLean"); // pixels of sideways drift over the whole rise
 
   const id = newId();
@@ -371,7 +432,7 @@ async function launchBloom(x0, y0, throwVec, heavy) {
 
     const y = y0 - travel * pow(phase, power);
     const wobbleX = (noise(seed, (elapsed / 1000) * wobbleSpeed + y * wobbleStretch) - 0.5) * wobble; // noise of time + y
-    const x = x0 + wobbleX + lean * phase;
+    const x = x0 + wobbleX + lean * (1 - pow(1 - phase, 2)); // ease-out, like something thrown
     const d = lerp(startSize, endSize, 1 - pow(1 - phase, 2));
     const alpha = phase < fadeStart ? peakAlpha : map(phase, fadeStart, 1, peakAlpha, 0);
 
@@ -421,6 +482,7 @@ function fitCanvas() {
   const w = fullscreen
     ? window.innerWidth
     : Math.min(document.documentElement.clientWidth, window.innerHeight * aspect);
+  applyDensity(); // the screen's density changes with browser zoom (see Performance debugging)
   resizeCanvas(Math.floor(w), Math.floor(w / aspect));
   circleLayer.resizeCanvas(width, height);
 }
@@ -438,6 +500,42 @@ function setupSizing() {
 
 function keyPressed() {
   if (key === "f" || key === "F") toggleFullscreen();
+  if (key === "p" || key === "P") renderMode = (renderMode + 1) % RENDER_MODES.length;
+  if (key === "1") toggleLowDensity();
+}
+
+// ---------- Performance debugging ----------
+//
+// P cycles what gets rendered, 1 toggles 1× density. The current mode shows on the FPS meter (R).
+// Use these to find what's costing frame time:
+//   full            — everything (normal)
+//   circles only    — circle layer straight to the screen, no trail passes
+//   background only — just clear to the background color: if this is still slow, it's not the sketch
+
+const RENDER_MODES = ["full", "circles only", "background only"];
+let renderMode = 0;
+let lowDensity = false;
+
+// Render density = the screen's real pixel density, capped at MAX_DENSITY.
+// p5 would otherwise round the density *up* (1.6 → 2), drawing pixels the screen can't show.
+// 2× doesn't fit in a 60 fps frame on the Surface Pro 8 in fullscreen; 1.6× does.
+const MAX_DENSITY = 1.6;
+const renderDensity = () => (lowDensity ? 1 : Math.min(window.devicePixelRatio, MAX_DENSITY));
+
+function applyDensity() {
+  const density = renderDensity();
+  if (pixelDensity() !== density) pixelDensity(density);
+  if (circleLayer.pixelDensity() !== density) circleLayer.pixelDensity(density);
+}
+
+function toggleLowDensity() {
+  lowDensity = !lowDensity;
+  applyDensity();
+}
+
+// read by fps.js
+function perfLabel() {
+  return `${RENDER_MODES[renderMode]} · ${pixelDensity()}× (P, 1)`;
 }
 
 // ---------- Multi-touch input ----------
@@ -507,6 +605,12 @@ function drawLayer(layer) {
 
 function draw() {
   pal = currentPalette();
+  orbitWarpTime += (deltaTime / 1000) * param("orbitWarpDrift"); // see launchOrbit
+  const mode = RENDER_MODES[renderMode]; // see Performance debugging
+  if (mode === "background only") {
+    background(...pal.bg);
+    return;
+  }
 
   // just the circles, on a transparent background (the background color is added in postfx.js)
   circleLayer.clear();
@@ -520,5 +624,10 @@ function draw() {
   drawLayer(fireworks);
   circleLayer.pop();
 
+  if (mode === "circles only") {
+    background(...pal.bg);
+    image(circleLayer, -width / 2, -height / 2, width, height); // WEBGL: origin is the centre
+    return;
+  }
   renderPostFx(circleLayer); // postfx.js: trails, bands, background, circles on top
 }

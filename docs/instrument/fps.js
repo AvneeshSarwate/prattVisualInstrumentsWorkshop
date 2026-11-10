@@ -18,7 +18,8 @@
     worst = Math.max(worst, dt);
     if (now - windowStart >= 500) {
       const fps = (frames * 1000) / (now - windowStart);
-      meter.textContent = `${fps.toFixed(0)} fps  worst ${worst.toFixed(1)} ms  (R)`;
+      const mode = typeof perfLabel === "function" ? `\n${perfLabel()}` : ""; // render mode, from sketch.js
+      meter.textContent = `${fps.toFixed(0)} fps  worst ${worst.toFixed(1)} ms  (R)${mode}`;
       meter.classList.toggle("slow", fps < 58);
       windowStart = now;
       frames = 0;

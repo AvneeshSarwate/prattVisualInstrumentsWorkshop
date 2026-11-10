@@ -1,4 +1,4 @@
-// Touch debug readout — press D to show/hide.
+// Touch debug readout — hidden at first; press D to show/hide.
 //
 // Shows what the browser reports for each touch on the canvas, to test whether this screen
 // gives anything usable as "tap intensity":
@@ -8,12 +8,13 @@
 
 (() => {
   const MAX_HISTORY = 10;
-  let visible = true;
+  let visible = false; // off by default — press D to show it
   const active = new Map(); // pointerId -> stats for presses still down
   const history = []; // finished presses, newest first
 
   const readout = document.createElement("pre");
   readout.id = "touch-debug";
+  readout.hidden = true;
   document.addEventListener("DOMContentLoaded", () => document.body.append(readout));
 
   const fmt = (n) => (Math.round(n * 10) / 10).toString();

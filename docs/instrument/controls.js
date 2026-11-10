@@ -24,8 +24,9 @@ const AUTOSAVE_MS = 5000;
 const CAN_SAVE = ["localhost", "127.0.0.1"].includes(location.hostname);
 
 // key -> { def, base, live, setBase(v), setLive(v), ... }. param(key) is what the sketch calls.
+// For params with `smooth` set, it returns the smoothed value (see Smoothing below).
 const params = {};
-const param = (key) => params[key].live;
+const param = (key) => params[key].value;
 
 let palettes = []; // the PALETTES array from sketch.js — the editor changes it in place
 let knobCCs = DEFAULT_KNOB_CCS.slice();
@@ -81,6 +82,29 @@ async function buildControls(groups, paletteList, canvasEl) {
     ui.devices.classList.toggle("ok", !error && names.length > 0);
   });
   setupAutosave();
+  setupSmoothing();
+}
+
+// ---------- Smoothing (params with `smooth: <seconds>`) ----------
+//
+// Knob ticks and slider drags move a value in steps. For a smoothed param, param() instead returns
+// a value that eases toward the slider/knob: each frame it closes part of the remaining gap,
+// so it reaches ~63% of a change after `smooth` seconds and ~95% after 3 × `smooth`.
+
+function setupSmoothing() {
+  const smoothedParams = Object.values(params).filter((p) => p.def.smooth > 0);
+  let last = performance.now();
+  const tick = (now) => {
+    const dt = Math.min((now - last) / 1000, 0.1); // capped so a stalled tab doesn't jump
+    last = now;
+    for (const p of smoothedParams) {
+      const k = 1 - Math.exp(-dt / p.def.smooth); // fraction of the gap to close this frame
+      p.value += (p.live - p.value) * k;
+      if (Math.abs(p.live - p.value) < 1e-6) p.value = p.live;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 function buildGroup(group, savedOrder, savedValues) {
@@ -118,9 +142,11 @@ function buildRow(def, savedBase) {
   label.title = `${def.label} — double-click to reset`;
 
   // the slider (base value), with the live-value bar right under it
+  // The slider and knob move through a position 0..1; the value is min + range * position^curve.
+  // curve 1 (the default) = linear. curve > 1 = finer control at the low end (e.g. particle count).
   const track = el("div", "track");
   const input = el("input");
-  Object.assign(input, { type: "range", min: def.min, max: def.max, step: def.step });
+  Object.assign(input, { type: "range", min: 0, max: 1, step: "any" });
   const liveBar = el("div", "live");
   const liveFill = el("div", "fill");
   liveBar.append(liveFill);
@@ -128,7 +154,11 @@ function buildRow(def, savedBase) {
 
   const readout = el("span", "value"); // shows the live value
   const decimals = (String(def.step).split(".")[1] ?? "").length;
+  const curve = def.curve ?? 1;
   const clamp = (v) => Math.min(def.max, Math.max(def.min, v));
+  const snap = (v) => clamp(Number((def.min + Math.round((v - def.min) / def.step) * def.step).toFixed(6)));
+  const toValue = (pos) => snap(def.min + (def.max - def.min) * Math.pow(Math.min(1, Math.max(0, pos)), curve));
+  const toPos = (v) => (def.max > def.min ? Math.pow((v - def.min) / (def.max - def.min), 1 / curve) : 0);
 
   const p = {
     def,
@@ -136,28 +166,37 @@ function buildRow(def, savedBase) {
     readout,
     base: def.value,
     live: def.value,
-    setLive(v) {
+    value: def.value, // what param() returns: live, or live smoothed over time if def.smooth is set
+    livePos: 0, // exact knob position 0..1 (live is this, snapped to the step)
+    setLive(v, pos = toPos(clamp(v))) {
       p.live = clamp(v);
-      const span = def.max - def.min;
-      liveFill.style.width = `${span > 0 ? ((p.live - def.min) / span) * 100 : 0}%`;
+      if (!def.smooth) p.value = p.live; // smoothed params catch up in the smoothing loop instead
+      p.livePos = pos;
+      liveFill.style.width = `${pos * 100}%`;
       readout.textContent = p.live.toFixed(decimals);
       row.classList.toggle("offbase", p.live !== p.base);
     },
     setBase(v, save = true) {
-      p.base = clamp(v);
-      input.value = p.base;
+      p.base = snap(v);
+      input.value = toPos(p.base);
       p.setLive(p.base);
       if (save) markDirty();
     },
     setMax(max) {
       def.max = max;
-      input.max = max;
       p.setBase(p.base);
     },
+    // Knob ticks move the exact position; the value follows once the position crosses a step.
+    // (Keeping the exact position means small ticks add up instead of being lost to rounding.)
+    nudge(ticks) {
+      const pos = Math.min(1, Math.max(0, p.livePos + ticks / KNOB_TICKS_FULL_RANGE));
+      p.setLive(toValue(pos), pos);
+    },
   };
-  input.addEventListener("input", () => p.setBase(Number(input.value)));
+  input.addEventListener("input", () => p.setBase(toValue(Number(input.value))));
   label.addEventListener("dblclick", () => p.setBase(def.value));
   p.setBase(typeof savedBase === "number" ? savedBase : def.value, false);
+  p.value = p.live; // start smoothed params at their value, not easing in from the default
   params[def.key] = p;
 
   makeDraggable(row, handle, (rows, done) => (done ? markDirty() : refreshRows(rows)));
@@ -190,15 +229,19 @@ const middleY = (node) => {
 function makeDraggable(row, handle, onChange) {
   handle.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
+    const id = e.pointerId;
     const list = row.parentElement;
     const before = [...list.children];
     row.classList.add("dragging");
 
+    // Listen on the window, not the handle: moving the row in the DOM releases any pointer
+    // capture on the handle, which would end the drag after the first swap.
     const stop = new AbortController();
-    handle.addEventListener(
+    const opts = { signal: stop.signal };
+    window.addEventListener(
       "pointermove",
       (e) => {
+        if (e.pointerId !== id) return;
         // put the row in front of the first other row whose middle is below the pointer
         const next = [...list.children].find((r) => r !== row && e.clientY < middleY(r)) ?? null;
         if (next !== row.nextElementSibling) {
@@ -206,15 +249,16 @@ function makeDraggable(row, handle, onChange) {
           onChange(list, false);
         }
       },
-      { signal: stop.signal }
+      opts
     );
-    const end = () => {
+    const end = (e) => {
+      if (e.pointerId !== id) return;
       stop.abort();
       row.classList.remove("dragging");
       if ([...list.children].some((r, i) => r !== before[i])) onChange(list, true);
     };
-    handle.addEventListener("pointerup", end, { signal: stop.signal });
-    handle.addEventListener("pointercancel", end, { signal: stop.signal });
+    window.addEventListener("pointerup", end, opts);
+    window.addEventListener("pointercancel", end, opts);
   });
 }
 
@@ -245,11 +289,7 @@ function handleCC(cc, value, channel) {
   const ticks = value - 64;
   if (ticks === 0) return;
   const p = params[row.dataset.key];
-  const { min, max, step } = p.def;
-  const tickSize = Math.max(step, (max - min) / KNOB_TICKS_FULL_RANGE); // always at least one step
-  const raw = p.live + ticks * tickSize;
-  const snapped = min + Math.round((raw - min) / step) * step;
-  p.setLive(Number(snapped.toFixed(6)));
+  p.nudge(ticks);
 
   row.classList.remove("hit");
   void row.offsetWidth; // restart the flash animation
