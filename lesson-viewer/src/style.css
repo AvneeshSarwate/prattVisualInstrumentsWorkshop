@@ -1,0 +1,539 @@
+/* Lesson viewer chrome, set like a page of a Tufte book, inverted for a dark room / LED wall:
+   ivory ink on a warm charcoal page, hairline rules, an old-style serif, no boxes.
+   The code (stock dark theme) and the sketches (background(20)) are slightly darker than the
+   page, so they read as plates set into it.
+   The earlier sketch is an outlined rectangle, the newer one a filled rectangle. */
+
+:root {
+  --page: #1c1b19;
+  --ink: #ebe7db;
+  --ink-soft: #c9c5b8;
+  --dim: #8f8b7f;
+  --faint: #57554e;
+  --rule: #302f2b;
+  --error: #ec8f7d;
+
+  --serif: "EB Garamond Variable", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+  /* Pierre (@pierre/diffs) reads these through its shadow DOM */
+  --diffs-font-family: var(--mono);
+  --diffs-header-font-family: var(--serif);
+  --diffs-font-size: var(--code-size, 13px);
+  --diffs-line-height: 1.6;
+  --diffs-tab-size: 2;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--page);
+  color: var(--ink);
+  font: 15px/1.4 var(--serif);
+  font-variant-numeric: lining-nums;
+  color-scheme: dark;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- Layout ---------- */
+
+.app {
+  --margin: 20px; /* page margin; each half's content sits this far from the center rule */
+  position: relative;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) 11px var(--sketch-h, 44vh);
+}
+
+/* one hairline down the middle: earlier sketch on the left, newer on the right */
+.app::after {
+  content: "";
+  position: absolute;
+  top: 46px;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--rule);
+  pointer-events: none;
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  min-height: 46px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.wordmark {
+  font-size: 18px;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.controls {
+  justify-self: end;
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+
+/* View switches: plain words; the current one in ink, underlined */
+.segmented {
+  display: flex;
+  gap: 12px;
+}
+
+.segmented button,
+.text-size button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.segmented button:hover,
+.text-size button:hover {
+  color: var(--ink);
+}
+
+.segmented button[aria-pressed="true"] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.text-size {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- Stepper: the lesson as a row of numbered rectangles ---------- */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+}
+
+.connector {
+  width: 5px;
+}
+
+.connector.is-active {
+  height: 1px;
+  background: var(--ink);
+}
+
+.step {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--faint);
+  background: transparent;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.step:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.step.is-old {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.step.is-new {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--page);
+}
+
+.step-arrow {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.step-arrow svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+}
+
+.step-arrow:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.step-arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ---------- Badges: a sketch's number, outlined (earlier) or filled (newer) ---------- */
+
+.badge {
+  flex: none;
+  width: 22px;
+  height: 17px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--ink);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.badge.new {
+  background: var(--ink);
+  color: var(--page);
+}
+
+/* ---------- Code ---------- */
+
+.code-area {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.code-heads,
+.code-body,
+.sketch-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: calc(var(--margin) * 2);
+  padding-inline: var(--margin);
+}
+
+.code-body {
+  min-height: 0;
+}
+
+.code-scroll {
+  position: relative;
+  z-index: 1; /* the dark plates cover the center rule */
+}
+
+.code-area[data-layout="single"] .code-heads,
+.code-area[data-mode="diff"] .code-body {
+  grid-template-columns: 1fr; /* a split diff draws its own two columns */
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 7px 0;
+}
+
+.file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.filename {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.edited {
+  display: none;
+  font-size: 14px;
+  color: var(--dim);
+}
+
+.file-label[data-edited] .edited {
+  display: inline;
+}
+
+.arrow {
+  color: var(--faint);
+}
+
+.stats {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--dim);
+}
+
+.stats span + span {
+  margin-left: 0.5em;
+}
+
+.code-scroll {
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  padding-block: 6px;
+}
+
+.empty {
+  margin: 0;
+  padding: 32px 20px;
+  color: var(--dim);
+  background: var(--page);
+}
+
+/* ---------- Divider ---------- */
+
+.divider {
+  position: relative;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.divider::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 1px;
+  translate: -50% -50%;
+  background: var(--faint);
+  box-shadow:
+    0 -2px 0 var(--faint),
+    0 2px 0 var(--faint);
+}
+
+.divider:hover::after,
+.divider:focus-visible::after {
+  background: var(--ink);
+  box-shadow:
+    0 -2px 0 var(--ink),
+    0 2px 0 var(--ink);
+}
+
+.divider:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---------- Sketches ---------- */
+
+.sketch-area {
+  min-height: 0;
+}
+
+.sketch-panel {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 0 6px;
+}
+
+.summary {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex: none;
+}
+
+.button {
+  padding: 1px 10px 2px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--ink);
+  color: var(--page);
+}
+
+.button.quiet {
+  padding: 0;
+  border: 0;
+  color: var(--dim);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--faint);
+  text-underline-offset: 3px;
+}
+
+.button.quiet:hover {
+  background: transparent;
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
+.stage {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.stage iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  border: 0;
+  transform-origin: 0 0;
+  background: transparent;
+}
+
+.error {
+  position: absolute;
+  z-index: 2;
+  left: 8px;
+  right: 8px;
+  bottom: 22px;
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 2px solid var(--error);
+  background: var(--page);
+  color: var(--error);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ---------- Small screens: stack everything and let the page scroll ---------- */
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .app {
+    height: auto;
+    grid-template-rows: auto auto;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+
+  .controls {
+    justify-self: start;
+    flex-wrap: wrap;
+  }
+
+  .stepper {
+    gap: 2px;
+  }
+
+  .step {
+    width: 24px;
+  }
+
+  .connector {
+    width: 3px;
+  }
+
+  .app {
+    --margin: 16px;
+  }
+
+  .app::after {
+    display: none;
+  }
+
+  .code-heads,
+  .code-body,
+  .sketch-area {
+    grid-template-columns: 1fr;
+  }
+
+  .code-scroll {
+    height: auto;
+    max-height: 60vh;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .stage {
+    aspect-ratio: 16 / 10;
+  }
+}

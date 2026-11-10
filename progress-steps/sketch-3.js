@@ -13,9 +13,9 @@ function draw() {
   if (circleX !== null) {
     circleX = circleX + 5;
     circle(circleX, circleY, 133);
-    if (circleX > width) {
-      circleX = null;
-    }
+  }
+  if (circleX > width) {
+    circleX = null;
   }
 }
 

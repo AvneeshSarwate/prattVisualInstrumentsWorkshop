@@ -1,0 +1,19 @@
+# dependencies and build output
+node_modules
+dist
+
+# Vite cache and local env files
+.vite
+*.local
+.env
+.env.*
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
