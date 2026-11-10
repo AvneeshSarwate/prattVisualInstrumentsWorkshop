@@ -12,8 +12,11 @@ function draw() {
   noFill();
   stroke(255);
   let radius = radiusSlider.value();
+  // update circles
   updateAllCircles();
+  // clear circles
   cleanUpAllCircles();
+  // draw circles
   for (let i = 0; i < circles.length; i++) {
     circle(circles[i].x, circles[i].y, radius * 2);
   }

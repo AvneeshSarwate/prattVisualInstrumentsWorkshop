@@ -11,8 +11,11 @@ function draw() {
   background(20);
   noFill();
   stroke(255);
+  // update circles
   updateAllCircles();
+  // clear circles
   cleanUpAllCircles();
+  // draw circles
   for (let i = 0; i < circles.length; i++) {
     circle(circles[i].x, circles[i].y, circles[i].radius * 2);
   }
