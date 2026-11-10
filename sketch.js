@@ -61,14 +61,14 @@ const PARAM_GROUPS = [
     title: "Orbit — middle third",
     knobSet: 2,
     params: [
-      { key: "orbitFadeIn", label: "fade in (s)", min: 0.1, max: 8, value: 2, step: 0.1 },
+      // attack/decay envelope: the ring opens over the attack, then closes back down over the decay
+      { key: "orbitFadeIn", label: "attack (s)", min: 0.1, max: 8, value: 2, step: 0.1 },
+      { key: "orbitDecay", label: "decay (s)", min: 0.1, max: 20, value: 6, step: 0.1 },
       { key: "orbitSpeed", label: "rotation speed", min: -3, max: 3, value: 0.6, step: 0.05 },
       { key: "orbitNoise", label: "circle ↔ noise", min: 0, max: 1, value: 0, step: 0.01 },
       { key: "orbitRadius", label: "radius", min: 20, max: 400, value: 160, step: 1 },
       { key: "orbitCount", label: "circles", min: 1, max: 80, value: 24, step: 1 },
       { key: "orbitSize", label: "circle size", min: 2, max: 80, value: 22, step: 1 },
-      { key: "orbitHold", label: "hold (s)", min: 0, max: 20, value: 6, step: 0.1 },
-      { key: "orbitFadeOut", label: "fade out (s)", min: 0.1, max: 10, value: 2, step: 0.1 },
       { key: "orbitStartRadius", label: "start radius ×", min: 0, max: 1, value: 0.5, step: 0.01 },
       { key: "orbitSpeedJitter", label: "speed variation ±", min: 0, max: 1, value: 0.25, step: 0.01 },
       { key: "orbitThrowSpeed", label: "throw speed", min: 0, max: 3000, value: 900, step: 10 },
@@ -295,7 +295,9 @@ function domainWarp(x, y, t, seed, freq, fold) {
 // ---------- Gesture: orbit around the center ----------
 
 async function launchOrbit(x0, y0, throwVec, heavy) {
-  const fadeIn = param("orbitFadeIn") * 1000; // ms
+  const attack = param("orbitFadeIn") * 1000; // ms
+  const decay = param("orbitDecay") * 1000; // ms
+  const duration = attack + decay;
   const speedJitter = param("orbitSpeedJitter");
   // throw direction picks the spin: a throw to the left reverses the rotation
   const spin = throwVec.x < 0 ? -1 : 1;
@@ -305,9 +307,6 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
   const fullRadius = param("orbitRadius");
   const startRadius = param("orbitStartRadius"); // fraction of the full radius it grows from
   const fullSize = param("orbitSize");
-  const hold = param("orbitHold") * 1000; // ms
-  const fadeOut = param("orbitFadeOut") * 1000; // ms
-  const duration = fadeIn + hold + fadeOut;
 
   const warpAmount = param("orbitWarpAmount") * fullRadius; // how far (pixels) the field can push a point
   const warpFreq = param("orbitWarpFreq");
@@ -334,11 +333,12 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
     const elapsed = performance.now() - startTime;
     phase = min(elapsed / duration, 1);
 
-    // fade in = orbit radius grows to full while circles grow from 0 to full size
-    const grow = 1 - pow(1 - constrain(elapsed / fadeIn, 0, 1), 3); // ease-out
-    const radius = fullRadius * lerp(startRadius, 1, grow);
-    const size = fullSize * grow;
-    const alpha = elapsed > fadeIn + hold ? 255 * (1 - (elapsed - fadeIn - hold) / fadeOut) : 255;
+    // linear attack/decay envelope, 0 -> 1 -> 0: the whole (warped) ring scales from start radius ->
+    // full -> start radius, and the circles grow from nothing to full size and back to nothing.
+    const open = elapsed < attack ? elapsed / attack : 1 - constrain((elapsed - attack) / decay, 0, 1);
+    const scale = lerp(startRadius, 1, open); // how open the ring is, as a fraction of full size
+    const size = fullSize * open;
+    const alpha = 255;
     const rotation = startAngle + (speed * elapsed) / 1000;
 
     const seconds = elapsed / 1000;
@@ -350,13 +350,14 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
     data.circles = seeds.map((seed, i) => {
       const a = rotation + (i / count) * TWO_PI;
       // point on the plain circle, in units of the full radius
-      const ux = (cos(a) * radius) / fullRadius;
-      const uy = (sin(a) * radius) / fullRadius;
+      const ux = cos(a);
+      const uy = sin(a);
       // domain warp: push the point through a 2D noise field. The field is fixed in space,
       // so circles slide along one smooth warped loop as they rotate.
       const [wx, wy] = domainWarp(ux, uy, t, loopSeed, warpFreq, warpFold);
-      const x = cos(a) * radius + wx * warpAmount * noiseMix;
-      const y = sin(a) * radius + wy * warpAmount * noiseMix;
+      // the full-size warped ring, then scaled by the envelope — so the warp opens and closes with it
+      const x = (ux * fullRadius + wx * warpAmount * noiseMix) * scale;
+      const y = (uy * fullRadius + wy * warpAmount * noiseMix) * scale;
       return { x: cx + x, y: cy + y, d: size, alpha, seed };
     });
     await nextFrame();
