@@ -195,7 +195,7 @@ body.fullscreen .exit-fullscreen {
   border-radius: 3px;
   padding: 1px 0;
   color: var(--bg);
-  background: var(--accent);
+  background: #a4a4b0;
 }
 .badge:empty {
   background: none;
@@ -211,23 +211,60 @@ body.fullscreen .exit-fullscreen {
   flex-direction: column;
   gap: 2px;
 }
+/* base sliders: deliberately quiet (small dark thumb, thin track) — the live bar is what to watch.
+   The input stays 12px tall so it's still easy to grab with a finger. */
 .row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
+  height: 12px;
   margin: 0;
-  accent-color: var(--accent);
+  background: none;
+  cursor: pointer;
+}
+.row input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+.row input[type="range"]::-moz-range-track {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+.row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  margin-top: -3px; /* centre on the 2px track */
+  border: none;
+  border-radius: 50%;
+  background: #4c4c58;
+}
+.row input[type="range"]::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 50%;
+  background: #4c4c58;
+}
+.row input[type="range"]:hover::-webkit-slider-thumb,
+.row input[type="range"]:active::-webkit-slider-thumb {
+  background: var(--dim);
+}
+.row input[type="range"]:hover::-moz-range-thumb,
+.row input[type="range"]:active::-moz-range-thumb {
+  background: var(--dim);
 }
 /* live value (what the knob has done), under the base slider — only on knob-mapped rows */
 .live {
-  height: 4px;
-  border-radius: 2px;
+  height: 7px;
+  border-radius: 3px;
   background: var(--line);
   overflow: hidden;
 }
 .live .fill {
   height: 100%;
-  background: var(--dim);
-}
-.row.offbase .live .fill {
   background: var(--accent);
 }
 .row:nth-child(n + 5) .live {
