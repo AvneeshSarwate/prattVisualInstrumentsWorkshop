@@ -2,7 +2,7 @@
 let circles = [];
 
 function setup() {
-  createCanvas(960, 540);
+  createCanvas(640, 360);
 }
 
 function draw() {
@@ -12,7 +12,7 @@ function draw() {
   updateAllCircles();
   cleanUpAllCircles();
   for (let i = 0; i < circles.length; i++) {
-    circle(circles[i].x, circles[i].y, 200);
+    circle(circles[i].x, circles[i].y, 133);
   }
 }
 

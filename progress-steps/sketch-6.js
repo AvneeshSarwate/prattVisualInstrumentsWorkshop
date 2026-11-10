@@ -3,8 +3,8 @@ let circles = [];
 let radiusSlider;
 
 function setup() {
-  createCanvas(960, 540);
-  radiusSlider = createSlider(10, 200, 50);
+  createCanvas(640, 360);
+  radiusSlider = createSlider(7, 133, 33);
 }
 
 function draw() {

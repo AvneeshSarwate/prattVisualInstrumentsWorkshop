@@ -1,11 +1,11 @@
 // Circle, moving back and forth
 function setup() {
-  createCanvas(960, 540);
+  createCanvas(640, 360);
 }
 
 function draw() {
   background(20);
   noFill();
   stroke(255);
-  circle(width / 2 + sin(millis() / 500) * 200, height / 2, 200);
+  circle(width / 2 + sin(millis() / 500) * 133, height / 2, 133);
 }

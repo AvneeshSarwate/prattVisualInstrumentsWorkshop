@@ -1,11 +1,11 @@
 // Circle
 function setup() {
-  createCanvas(960, 540);
+  createCanvas(640, 360);
 }
 
 function draw() {
   background(20);
   noFill();
   stroke(255);
-  circle(width / 2, height / 2, 200);
+  circle(width / 2, height / 2, 133);
 }

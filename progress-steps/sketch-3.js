@@ -3,7 +3,7 @@ let circleX = null;
 let circleY = null;
 
 function setup() {
-  createCanvas(960, 540);
+  createCanvas(640, 360);
 }
 
 function draw() {
@@ -12,7 +12,7 @@ function draw() {
   stroke(255);
   if (circleX !== null) {
     circleX = circleX + 5;
-    circle(circleX, circleY, 200);
+    circle(circleX, circleY, 133);
     if (circleX > width) {
       circleX = null;
     }
