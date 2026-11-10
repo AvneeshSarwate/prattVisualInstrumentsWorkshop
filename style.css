@@ -284,3 +284,20 @@ body.fullscreen .exit-fullscreen {
 #controls.compact .palettes {
   display: none;
 }
+
+#fps-meter {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 4px 8px;
+  font: 11px/1.4 ui-monospace, Consolas, monospace;
+  color: #cfe;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+#fps-meter.slow {
+  color: #ff8a7a;
+}

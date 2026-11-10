@@ -14,6 +14,9 @@
 // then loops once per frame, writing its circles into a Map.
 // draw() just reads those Maps and paints whatever is in them.
 //
+// The circles are drawn onto a transparent layer, then post-processed into
+// displaced, age-banded trails: postfx.js
+//
 // Slider panel, drag-to-reorder and saving: controls.js
 // BeatStep knobs (MIDI): midi.js
 
@@ -91,14 +94,20 @@ const PARAM_GROUPS = [
   },
   {
     id: "global",
-    title: "Palette & throw",
+    title: "Palette, trails & throw",
     knobSet: 4,
     params: [
       // max is set to (number of palettes - 1) when the panel is built
       { key: "palette", label: "palette morph", min: 0, max: 3, value: 0, step: 0.01 },
+      // trails: see postfx.js
+      { key: "trailDisplace", label: "trail displacement", min: 0, max: 0.05, value: 0.01, step: 0.0005 },
+      { key: "trailBandFreq", label: "band frequency", min: 0, max: 60, value: 12, step: 0.5 },
+      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 10, value: 2, step: 0.05 },
       { key: "colorNoise", label: "color noise", min: 0, max: 80, value: 20, step: 1 },
       { key: "throwDrag", label: "full-throw drag (px)", min: 50, max: 1000, value: 300, step: 10 },
       { key: "heavyArea", label: "heavy touch area (px²)", min: 0, max: 15000, value: 8000, step: 50 },
+      { key: "trailWarpSpeed", label: "trail warp speed", min: 0, max: 2, value: 0.2, step: 0.01 },
+      { key: "trailBandSpeed", label: "band scroll speed", min: -20, max: 20, value: 10, step: 0.1 },
     ],
   },
 ];
@@ -126,6 +135,8 @@ const PALETTES = [
 ];
 
 let pal = PALETTES[0]; // recomputed every frame from the palette slider
+
+let circleLayer; // this frame's circles on a transparent background — the input to postfx.js
 
 function lerpRGB(a, b, t) {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
@@ -374,11 +385,13 @@ async function launchBloom(x0, y0, throwVec, heavy) {
 
 // p5 2.x waits for an async setup() to finish before it starts calling draw().
 async function setup() {
-  const canvas = createCanvas(W, H);
+  const canvas = createCanvas(W, H, WEBGL); // WebGL for the post-processing shaders
+  circleLayer = createGraphics(W, H); // a regular 2D canvas the circles are drawn on
   describe("Circles on a dark background: fireworks, orbiting rings and rising blooms appear when you click.");
 
   await buildControls(PARAM_GROUPS, PALETTES, canvas.elt); // controls.js — sliders, knobs, palette editor
   setupPointers(canvas.elt);
+  setupPostFx(); // postfx.js
   setupSizing();
 }
 
@@ -409,6 +422,7 @@ function fitCanvas() {
     ? window.innerWidth
     : Math.min(document.documentElement.clientWidth, window.innerHeight * aspect);
   resizeCanvas(Math.floor(w), Math.floor(w / aspect));
+  circleLayer.resizeCanvas(width, height);
 }
 
 function toggleFullscreen() {
@@ -485,20 +499,26 @@ function launchGesture(x, y, throwVec, heavy) {
 function drawLayer(layer) {
   for (const gesture of layer.values()) {
     for (const c of gesture.circles) {
-      fill(...circleColor(c.seed, c.alpha, gesture.heavy));
-      circle(c.x, c.y, c.d);
+      circleLayer.fill(...circleColor(c.seed, c.alpha, gesture.heavy));
+      circleLayer.circle(c.x, c.y, c.d);
     }
   }
 }
 
 function draw() {
   pal = currentPalette();
-  background(...pal.bg);
-  noStroke();
-  scale(width / W); // draw in W x H coordinates whatever size the canvas is
+
+  // just the circles, on a transparent background (the background color is added in postfx.js)
+  circleLayer.clear();
+  circleLayer.push();
+  circleLayer.noStroke();
+  circleLayer.scale(circleLayer.width / W); // draw in W x H coordinates whatever size the canvas is
 
   // draw order: blooms underneath, then orbits, fireworks on top
   drawLayer(blooms);
   drawLayer(orbits);
   drawLayer(fireworks);
+  circleLayer.pop();
+
+  renderPostFx(circleLayer); // postfx.js: trails, bands, background, circles on top
 }

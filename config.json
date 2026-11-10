@@ -45,9 +45,14 @@
     ],
     "global": [
       "palette",
+      "trailCutoff",
+      "trailDisplace",
+      "trailBandFreq",
       "colorNoise",
       "throwDrag",
-      "heavyArea"
+      "heavyArea",
+      "trailWarpSpeed",
+      "trailBandSpeed"
     ]
   },
   "knobCCs": [
@@ -107,9 +112,14 @@
     "bloomWobbleStretch": 0.004,
     "bloomOvershoot": 100,
     "palette": 0,
+    "trailCutoff": 0,
+    "trailDisplace": 0.006,
+    "trailBandFreq": 12,
     "colorNoise": 20,
     "throwDrag": 300,
-    "heavyArea": 8000
+    "heavyArea": 8000,
+    "trailWarpSpeed": 0.2,
+    "trailBandSpeed": 10
   },
   "palettes": [
     {
