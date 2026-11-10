@@ -32,6 +32,12 @@ let H = 720;
 //   set 1 = knobs 1-4, set 2 = knobs 5-8, set 3 = knobs 9-12, set 4 = knobs 13-16.
 // Drag a slider by its ⋮⋮ handle to change which ones are on the knobs.
 // With `npm run dev` the new order is saved to config.json.
+//
+// Optional per-parameter settings:
+//   curve: 2      slider/knob response — the value is min + range × position^curve.
+//                 > 1 = finer at the low end, < 1 = finer at the high end. Default 1 (linear).
+//   smooth: 0.05  ease the value toward the slider/knob over time (seconds — the time constant),
+//                 so knob steps don't show as jumps. Only useful for values read every frame.
 
 const PARAM_GROUPS = [
   {
@@ -64,8 +70,11 @@ const PARAM_GROUPS = [
       // attack/decay envelope: the ring opens over the attack, then closes back down over the decay
       { key: "orbitFadeIn", label: "attack (s)", min: 0.1, max: 8, value: 2, step: 0.1 },
       { key: "orbitDecay", label: "decay (s)", min: 0.1, max: 20, value: 6, step: 0.1 },
+      // envelope corners (fraction of the attack/decay spent speeding up or slowing down; the rest is linear)
+      { key: "orbitEaseStart", label: "ease at start", min: 0, max: 0.5, value: 0.08, step: 0.01 },
+      { key: "orbitEasePeak", label: "ease at peak", min: 0, max: 0.5, value: 0.12, step: 0.01 },
       { key: "orbitSpeed", label: "rotation speed", min: -3, max: 3, value: 0.6, step: 0.05 },
-      { key: "orbitNoise", label: "circle ↔ noise", min: 0, max: 1, value: 0, step: 0.01 },
+      { key: "orbitNoise", label: "circle ↔ noise", min: 0, max: 1, value: 0, step: 0.01, smooth: 0.05 },
       { key: "orbitRadius", label: "radius", min: 20, max: 400, value: 160, step: 1 },
       { key: "orbitCount", label: "circles", min: 1, max: 80, value: 24, step: 1 },
       { key: "orbitSize", label: "circle size", min: 2, max: 80, value: 22, step: 1 },
@@ -73,10 +82,11 @@ const PARAM_GROUPS = [
       { key: "orbitSpeedJitter", label: "speed variation ±", min: 0, max: 1, value: 0.25, step: 0.01 },
       { key: "orbitThrowSpeed", label: "throw speed", min: 0, max: 3000, value: 900, step: 10 },
       { key: "orbitFriction", label: "throw friction", min: 0.1, max: 6, value: 1.5, step: 0.1 },
-      { key: "orbitWarpAmount", label: "warp amount ×r", min: 0, max: 6, value: 3, step: 0.1 },
-      { key: "orbitWarpFreq", label: "warp frequency", min: 0.1, max: 3, value: 0.6, step: 0.05 },
-      { key: "orbitWarpFold", label: "warp swirl", min: 0, max: 5, value: 1.5, step: 0.1 },
-      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 1, value: 0.007, step: 0.001 },
+      // curve 0.75: small warp amounts all look alike, so the low end goes by faster
+      { key: "orbitWarpAmount", label: "warp amount ×r", min: 0, max: 6, value: 3, step: 0.01, curve: 0.75, smooth: 0.05 },
+      { key: "orbitWarpFreq", label: "warp frequency", min: 0.1, max: 3, value: 0.6, step: 0.05, smooth: 0.05 },
+      { key: "orbitWarpFold", label: "warp swirl", min: 0, max: 5, value: 1.5, step: 0.1, smooth: 0.05 },
+      { key: "orbitWarpDrift", label: "warp drift", min: 0, max: 1, value: 0.007, step: 0.001, smooth: 0.05 },
     ],
   },
   {
@@ -108,7 +118,7 @@ const PARAM_GROUPS = [
       // trails: see postfx.js
       { key: "trailDisplace", label: "trail displacement", min: 0, max: 0.05, value: 0.01, step: 0.0005 },
       { key: "trailBandFreq", label: "band frequency", min: 0, max: 60, value: 12, step: 0.5 },
-      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 2, value: 2, step: 0.001 },
+      { key: "trailCutoff", label: "trail cutoff (s)", min: 0, max: 2, value: 2, step: 0.001, curve: 1.5 },
       { key: "colorNoise", label: "color noise", min: 0, max: 80, value: 20, step: 1 },
       { key: "throwDrag", label: "full-throw drag (px)", min: 50, max: 1000, value: 300, step: 10 },
       { key: "heavyArea", label: "heavy touch area (px²)", min: 0, max: 15000, value: 8000, step: 50 },
@@ -294,24 +304,37 @@ function domainWarp(x, y, t, seed, freq, fold) {
 
 // ---------- Gesture: orbit around the center ----------
 
+// One warp clock shared by all orbits. It advances by warp drift every frame (in draw()), so turning
+// the drift knob changes how fast the field moves without making it jump.
+let orbitWarpTime = 0;
+
+// Mostly-linear ease from 0 to 1 as u goes 0 to 1 (a "trapezoid" speed profile):
+// the speed ramps up over the first `easeIn` fraction, stays constant (plain linear motion)
+// through the middle, and ramps down to zero over the last `easeOut` fraction.
+// Small fractions = linear travel with just the corners rounded off.
+function linearEase(u, easeIn, easeOut) {
+  u = constrain(u, 0, 1);
+  const v = 1 / (1 - (easeIn + easeOut) / 2); // top speed, so the whole move covers exactly 0 -> 1
+  if (u < easeIn) return (v * u * u) / (2 * easeIn);
+  if (u > 1 - easeOut) return 1 - (v * (1 - u) * (1 - u)) / (2 * easeOut);
+  return v * (u - easeIn / 2);
+}
+
 async function launchOrbit(x0, y0, throwVec, heavy) {
   const attack = param("orbitFadeIn") * 1000; // ms
   const decay = param("orbitDecay") * 1000; // ms
   const duration = attack + decay;
+  const easeStart = param("orbitEaseStart"); // ease-in at the very start of the attack
+  const easePeak = param("orbitEasePeak"); // rounds off the turnaround between attack and decay
   const speedJitter = param("orbitSpeedJitter");
   // throw direction picks the spin: a throw to the left reverses the rotation
   const spin = throwVec.x < 0 ? -1 : 1;
   const speed = spin * param("orbitSpeed") * random(1 - speedJitter, 1 + speedJitter); // radians per second
-  const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
   const count = param("orbitCount");
   const fullRadius = param("orbitRadius");
   const startRadius = param("orbitStartRadius"); // fraction of the full radius it grows from
   const fullSize = param("orbitSize");
-
-  const warpAmount = param("orbitWarpAmount") * fullRadius; // how far (pixels) the field can push a point
-  const warpFreq = param("orbitWarpFreq");
-  const warpFold = param("orbitWarpFold");
-  const warpDrift = param("orbitWarpDrift"); // how fast the warp field changes, per second
+  // (the warp parameters are global — read every frame below, so knobs affect orbits already on screen)
 
   // throw: the whole ring glides off in the drag direction and slows to a stop
   const throwSpeed = param("orbitThrowSpeed"); // pixels per second at full strength
@@ -333,9 +356,14 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
     const elapsed = performance.now() - startTime;
     phase = min(elapsed / duration, 1);
 
-    // linear attack/decay envelope, 0 -> 1 -> 0: the whole (warped) ring scales from start radius ->
+    // attack/decay envelope, 0 -> 1 -> 0: the whole (warped) ring scales from start radius ->
     // full -> start radius, and the circles grow from nothing to full size and back to nothing.
-    const open = elapsed < attack ? elapsed / attack : 1 - constrain((elapsed - attack) / decay, 0, 1);
+    // Mostly linear: a slight ease-in at the start, and the peak rounded off on both sides so it
+    // turns around smoothly instead of bouncing. The decay ends linearly (the circles are gone by then).
+    const open =
+      elapsed < attack
+        ? linearEase(elapsed / attack, easeStart, easePeak)
+        : 1 - linearEase((elapsed - attack) / decay, easePeak, 0);
     const scale = lerp(startRadius, 1, open); // how open the ring is, as a fraction of full size
     const size = fullSize * open;
     const alpha = 255;
@@ -345,7 +373,12 @@ async function launchOrbit(x0, y0, throwVec, heavy) {
     const cx = x0 + glide(vx, friction, seconds);
     const cy = y0 + glide(vy, friction, seconds);
 
-    const t = seconds * warpDrift; // slow drift of the warp field
+    // warp: global, live every frame (not snapshotted at launch)
+    const noiseMix = param("orbitNoise"); // 0 = perfect circle, 1 = noise loop
+    const warpAmount = param("orbitWarpAmount") * fullRadius; // how far (pixels) the field can push a point
+    const warpFreq = param("orbitWarpFreq");
+    const warpFold = param("orbitWarpFold");
+    const t = orbitWarpTime; // shared warp clock, advanced by warp drift in draw()
 
     data.circles = seeds.map((seed, i) => {
       const a = rotation + (i / count) * TWO_PI;
@@ -572,6 +605,7 @@ function drawLayer(layer) {
 
 function draw() {
   pal = currentPalette();
+  orbitWarpTime += (deltaTime / 1000) * param("orbitWarpDrift"); // see launchOrbit
   const mode = RENDER_MODES[renderMode]; // see Performance debugging
   if (mode === "background only") {
     background(...pal.bg);

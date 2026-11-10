@@ -21,8 +21,9 @@ const KNOB_TICKS_FULL_RANGE = 100; // knob ticks to sweep a slider end to end �
 const AUTOSAVE_MS = 5000;
 
 // key -> { def, base, live, setBase(v), setLive(v), ... }. param(key) is what the sketch calls.
+// For params with `smooth` set, it returns the smoothed value (see Smoothing below).
 const params = {};
-const param = (key) => params[key].live;
+const param = (key) => params[key].value;
 
 let palettes = []; // the PALETTES array from sketch.js — the editor changes it in place
 let knobCCs = DEFAULT_KNOB_CCS.slice();
@@ -78,6 +79,29 @@ async function buildControls(groups, paletteList, canvasEl) {
     ui.devices.classList.toggle("ok", !error && names.length > 0);
   });
   setupAutosave();
+  setupSmoothing();
+}
+
+// ---------- Smoothing (params with `smooth: <seconds>`) ----------
+//
+// Knob ticks and slider drags move a value in steps. For a smoothed param, param() instead returns
+// a value that eases toward the slider/knob: each frame it closes part of the remaining gap,
+// so it reaches ~63% of a change after `smooth` seconds and ~95% after 3 × `smooth`.
+
+function setupSmoothing() {
+  const smoothedParams = Object.values(params).filter((p) => p.def.smooth > 0);
+  let last = performance.now();
+  const tick = (now) => {
+    const dt = Math.min((now - last) / 1000, 0.1); // capped so a stalled tab doesn't jump
+    last = now;
+    for (const p of smoothedParams) {
+      const k = 1 - Math.exp(-dt / p.def.smooth); // fraction of the gap to close this frame
+      p.value += (p.live - p.value) * k;
+      if (Math.abs(p.live - p.value) < 1e-6) p.value = p.live;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 function buildGroup(group, savedOrder, savedValues) {
@@ -139,9 +163,11 @@ function buildRow(def, savedBase) {
     readout,
     base: def.value,
     live: def.value,
+    value: def.value, // what param() returns: live, or live smoothed over time if def.smooth is set
     livePos: 0, // exact knob position 0..1 (live is this, snapped to the step)
     setLive(v, pos = toPos(clamp(v))) {
       p.live = clamp(v);
+      if (!def.smooth) p.value = p.live; // smoothed params catch up in the smoothing loop instead
       p.livePos = pos;
       liveFill.style.width = `${pos * 100}%`;
       readout.textContent = p.live.toFixed(decimals);
@@ -167,6 +193,7 @@ function buildRow(def, savedBase) {
   input.addEventListener("input", () => p.setBase(toValue(Number(input.value))));
   label.addEventListener("dblclick", () => p.setBase(def.value));
   p.setBase(typeof savedBase === "number" ? savedBase : def.value, false);
+  p.value = p.live; // start smoothed params at their value, not easing in from the default
   params[def.key] = p;
 
   makeDraggable(row, handle, (rows, done) => (done ? markDirty() : refreshRows(rows)));
